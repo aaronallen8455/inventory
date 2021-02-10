@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 289943022c49d38ebd17459e4dc4bc8e4bd513f8995ef3ab761b0c8fa53fc3a9
+-- hash: 7abe06afb04244bbd24b2f14499cf9400d6c8b4050801fafd8843124e170b71b
 
 name:           inventory
 version:        0.1.0.0
@@ -75,10 +75,18 @@ test-suite inventory-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      HieSource.T1
+      HieSource.T2
+      HieSource.T3
+      HieSource.T4
+      HieSource.T5
+      HieSource.T6
+      HieSource.T7
+      HieSource.T8
       Paths_inventory
   hs-source-dirs:
       test
-  ghc-options: -Wall -fwarn-incomplete-patterns -fwrite-ide-info -hiedir=.hie -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -fwarn-incomplete-patterns -fwrite-ide-info -hiedir=.hie -threaded -rtsopts -with-rtsopts=-N -hiedir=test/hie
   build-depends:
       appendmap
     , base >=4.7 && <5
@@ -89,4 +97,6 @@ test-suite inventory-test
     , ghc
     , inventory
     , mtl
+    , tasty
+    , tasty-hunit
   default-language: Haskell2010

@@ -17,10 +17,8 @@ import qualified Data.Map.Strict as M
 import           Data.Map.Append.Strict (AppendMap(..))
 import qualified Data.Set as S
 
-import           HieUtils
 import           HieTypes
 
-import           DynFlags
 import           Name
 import           FastString
 import           Utils
@@ -55,13 +53,25 @@ recurseSig f (Apply a as) =
         (f . map (recurseSig f) <$> as)
 recurseSig _ s = s
 
+-- TODO don't need this
+-- | Used to check if the result types of two functions are similar enough to
+-- warrant deeper comparison
 data TypeFingerprint varIx
-  = TFFree varIx
-  | TFName FastString (Maybe Name)
-  | TFApp (TypeFingerprint varIx) [TypeFingerprint varIx]
-  | TFFun [TypeFingerprint varIx]
+  = TFFree !varIx
+  | TFName !FastString !(Maybe Name)
+  | TFApp !(TypeFingerprint varIx) ![TypeFingerprint varIx]
+  | TFFun ![TypeFingerprint varIx]
   deriving (Eq, Ord, Functor)
 
+instance Show varIx => Show (TypeFingerprint varIx) where
+  show (TFFree i) = show i
+  show (TFName _ _) = "name"
+  show (TFApp fp fps) = "app " <> show fp <> unwords (show <$> fps)
+  show (TFFun fps) = "fun " <> unwords (show <$> fps)
+
+-- | Using this as a Map key provides a heuristic for matching only the
+-- signatures that share key characteristics rather than blindly comparing
+-- every signature.
 data SigFingerprint =
   SF { sfArgs :: Int -- the length of the [Sig]
      , sfFreeVars :: [(Int, Int)] -- num occurances, num of vars that occur that many times
@@ -74,14 +84,17 @@ sigFreeVars = M.toList
             . (foldMap . foldMap) (`M.singleton` 1) -- occurances of each var
 
 resultFingerprint :: Sig FreeVarIdx -> TypeFingerprint FreeVarIdx
-resultFingerprint s = subtract minIx <$> s'
+resultFingerprint s = evalState (go s) IM.empty
   where
-    (s', minIx) = runState (go s) maxBound
-
-    go :: Sig FreeVarIdx -> State Int (TypeFingerprint FreeVarIdx)
+    go :: Sig FreeVarIdx -> State (IM.IntMap FreeVarIdx) (TypeFingerprint FreeVarIdx)
     go = \case
       TyDescriptor str mbName -> pure $ TFName str mbName
-      FreeVar i  -> TFFree i <$ modify' (min i)
+      FreeVar i  ->
+        do m <- get
+           case m IM.!? i of
+             Nothing -> let i' = IM.size m
+                         in TFFree i' <$ modify' (IM.insert i i')
+             Just i' -> pure $ TFFree i'
       Arg ss     -> TFFun <$> traverse go ss
       Qual _     -> pure $ TFFun [] -- ignore quals in result type
       Apply c as -> TFApp <$> (TFFun <$> traverse go c)
@@ -97,9 +110,9 @@ sigFingerprint sig
        }
   | otherwise = error "empty Sig"
 
-mkSigMap :: HieAST HieTypeFix -> SigMap
-mkSigMap node =
-  let renderedSigs = modNodeChildren nameSigRendered node
+mkSigMap :: (HieTypeFix -> String) -> HieAST HieTypeFix -> SigMap
+mkSigMap renderType node =
+  let renderedSigs = modNodeChildren (nameSigRendered renderType) node
       sigReps = modNodeChildren nameSigRep node
       mkMatch n s r = (sigFingerprint r, MatchedSigs [(r, s, [n])])
       sigMatches = M.elems $ M.intersectionWithKey mkMatch renderedSigs sigReps
@@ -126,9 +139,9 @@ instance Semigroup MatchedSigs where
                     Just s' -> (s' : ss, True)
                     Nothing -> (s : ss, False)
               check (ss, True) s = (s : ss, True)
-           in  case foldl' check ([], False) sigs of
-                 (res, False) -> (res, sig : nonMatches)
-                 (res, True) -> (res, nonMatches)
+           in case foldl' check ([], False) sigs of
+                (res, False) -> (res, sig : nonMatches)
+                (res, True) -> (res, nonMatches)
 
 instance Monoid MatchedSigs where
   mempty = MatchedSigs mempty
@@ -172,34 +185,32 @@ matchArgs False vm sa sb
 matchArgs True vm (FreeVar ai : restA) (FreeVar bi : restB)
   | vm IM.!? bi == Just ai
   = matchArgs True vm restA restB
-  | otherwise = False
 
 matchArgs True vm (TyDescriptor sa na : restA) (TyDescriptor sb nb : restB)
   | sa == sb
   , na == nb
   = matchArgs True vm restA restB
-  | otherwise = False
 
 matchArgs True vm (Arg aa : restA) (Arg ab : restB)
-  = matchArgs False vm aa ab
-      && matchArgs True vm restA restB
+  | matchArgs False vm aa ab
+  = matchArgs True vm restA restB
 
 matchArgs True vm (Apply ca aa : restA) (Apply cb ab : restB)
   | length aa == length ab
   , matchArgs False vm ca cb
   , and (zipWith (matchArgs False vm) aa ab)
   = matchArgs True vm restA restB
-  | otherwise = False
 
 matchArgs True vm (a : sa) sb
   = or $ do
-      -- try all different rotations of sb
+      -- try at different positions of sb, argument order doesn't matter
       (i, f : rest) <- drop 1 $ zip (inits sb) (tails sb)
       guard $ matchArgs True vm [a] [f]
       pure $ matchArgs True vm sa (i ++ rest)
 
 matchArgs _ _ _ _ = False
 
+-- | generate all possible assignments of free variables from one sig to another
 varMatchings :: IM.IntMap FreeVarIdx
              -> [FreeVarIdx]
              -> [FreeVarIdx]
@@ -207,12 +218,13 @@ varMatchings :: IM.IntMap FreeVarIdx
 varMatchings existing xs ys
   | len /= length ys = [] -- should have same number of vars to be considered
   | otherwise = IM.union existing . IM.fromList . zip range
-            <$> permutations range
+            <$> permutations ys
   where
     len = length xs
     mSize = IM.size existing
     range = [mSize .. mSize + len - 1]
 
+-- TODO only include functions with arguments?
 nameSigRep :: HieAST a -> M.Map Name [Sig FreeVarIdx]
 nameSigRep node
   | nodeHasAnnotation "TypeSig" "Sig" node
@@ -252,13 +264,13 @@ frontLoadVarDecls = go . map (recurseSig frontLoadVarDecls)
   getVars (VarCtx vs) = vs
   getVars _ = []
 
-nameSigRendered :: HieAST HieTypeFix -> M.Map Name String
-nameSigRendered node
+nameSigRendered :: (HieTypeFix -> String) -> HieAST HieTypeFix -> M.Map Name String
+nameSigRendered renderType node
   | nodeHasAnnotation "FunBind" "HsBindLR" node
   , identNode : _ <- nodeChildren node
   , Right name : _ <- M.keys . nodeIdentifiers $ nodeInfo identNode
   , let renderedTy = unwords
-                   . map (renderHieType unsafeGlobalDynFlags)
+                   . map renderType
                    . nodeType
                    $ nodeInfo node
   = M.singleton name renderedTy

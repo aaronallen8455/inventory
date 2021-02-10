@@ -13,6 +13,8 @@ import           PprColour
 
 import           MatchSigs.ProcessHie (SigMap, MatchedSigs(..))
 
+-- TODO only print first 20 results for a given signature
+
 sigDuplicateOutput :: SigMap -> SDoc
 sigDuplicateOutput (AppendMap m) | null m = text "(No duplicated signatures)"
 sigDuplicateOutput (AppendMap sigMap) =
@@ -25,7 +27,7 @@ sigDuplicateOutput (AppendMap sigMap) =
     multipleNames (_, _, names) = length names > 1
     sigLine (_, renderedSig, names) =
       vcat
-        [ coloured colCyanFg $ text (":: " ++ renderedSig)
+        [ coloured colCyanFg $ dcolon <+> text renderedSig
         , nest 2 . vcat $ count (length names) : (printName <$> names)
         , text ""
         ]

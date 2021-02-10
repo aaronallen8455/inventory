@@ -32,6 +32,7 @@ type DefCounter =
             , Sum Int
             )
 
+-- TODO what about standalone kind sigs?
 -- | Counts up the different types of definitions in the given 'HieAST'.
 declLines :: HieAST a -> DefCounter
 declLines node

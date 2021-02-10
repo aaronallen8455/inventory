@@ -1,5 +1,7 @@
 module HieFile
   ( getCounters
+  , hieFileToCounters
+  , mkNameCache
   ) where
 
 import           Control.Exception (onException)
@@ -12,6 +14,7 @@ import           System.Directory (canonicalizePath, doesDirectoryExist, doesFil
 import           System.Environment (lookupEnv)
 import           System.FilePath (isExtensionOf)
 
+import           DynFlags (unsafeGlobalDynFlags)
 import           HieBin
 import           HieTypes
 import           HieUtils
@@ -25,10 +28,13 @@ import           Utils
 
 getCounters :: IO (DefCounter, UsageCounter, SigMap, Sum Int)
 getCounters = do
-  foldMap hieFileToCounters <$> getHieFiles
+  foldMap (hieFileToCounters unsafeRenderType)
+    <$> getHieFiles
 
-hieFileToCounters :: HieFile -> (DefCounter, UsageCounter, SigMap, Sum Int)
-hieFileToCounters hieFile =
+hieFileToCounters :: (HieTypeFix -> String)
+                  -> HieFile
+                  -> (DefCounter, UsageCounter, SigMap, Sum Int)
+hieFileToCounters renderType hieFile =
   let hies = hie_asts hieFile
       asts = getAsts hies
       types = hie_types hieFile
@@ -36,7 +42,7 @@ hieFileToCounters hieFile =
 
    in ( foldMap (modNodeChildren declLines) asts
       , foldMap (modNodeChildren usageCounter) asts
-      , foldMap mkSigMap $ getAsts fullHies
+      , foldMap (mkSigMap renderType) $ getAsts fullHies
       , Sum . length . BS.lines $ hie_hs_src hieFile
       )
 
@@ -84,4 +90,9 @@ getHieFilesIn path = do
               return []
     else
       return []
+
+-- | Render a signature using 'unsafeGlobalDynFlags'. Do not use this in the
+-- test suite, it will crash.
+unsafeRenderType :: HieTypeFix -> String
+unsafeRenderType = renderHieType unsafeGlobalDynFlags
 

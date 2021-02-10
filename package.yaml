@@ -56,5 +56,8 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -hiedir=test/hie
     dependencies:
     - inventory
+    - tasty
+    - tasty-hunit
