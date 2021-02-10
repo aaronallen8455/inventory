@@ -21,7 +21,7 @@ main = defaultMain $ do
     sigMatchTest "T4" nameCache [2]
     sigMatchTest "T5" nameCache [2]
     sigMatchTest "T6" nameCache [3]
-    sigMatchTest "T7" nameCache [2]
+    sigMatchTest "T7" nameCache [2, 1]
     sigMatchTest "T8" nameCache [2]
 
 sigMatchTest :: FilePath -> NameCache -> [Int] -> IO ()

@@ -5,3 +5,6 @@ t7A = undefined
 
 t7B :: (a -> b, ()) -> (a, b -> c) -> c
 t7B = undefined
+
+t7C :: (a -> c, ()) -> (a, b -> c) -> c
+t7C = undefined

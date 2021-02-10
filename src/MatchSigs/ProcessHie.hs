@@ -34,7 +34,8 @@ data Sig varIx
   | Qual [Sig varIx]
   | Apply [Sig varIx] [[Sig varIx]]
   | VarCtx [varIx]
-  deriving (Eq, Ord, Foldable)
+  | Tuple [[Sig varIx]]
+  deriving (Eq, Ord, Foldable, Functor)
 
 isQual :: Sig a -> Bool
 isQual (Qual _) = True
@@ -53,7 +54,7 @@ recurseSig f (Apply a as) =
         (f . map (recurseSig f) <$> as)
 recurseSig _ s = s
 
--- TODO don't need this
+-- TODO don't need this?
 -- | Used to check if the result types of two functions are similar enough to
 -- warrant deeper comparison
 data TypeFingerprint varIx
@@ -61,6 +62,9 @@ data TypeFingerprint varIx
   | TFName !FastString !(Maybe Name)
   | TFApp !(TypeFingerprint varIx) ![TypeFingerprint varIx]
   | TFFun ![TypeFingerprint varIx]
+  | TFTuple ![TypeFingerprint ()]
+    -- we have to ignore vars completely in case of tuples because there's no
+    -- totally reliable way to sort the elements in the presence of free vars
   deriving (Eq, Ord, Functor)
 
 instance Show varIx => Show (TypeFingerprint varIx) where
@@ -68,14 +72,15 @@ instance Show varIx => Show (TypeFingerprint varIx) where
   show (TFName _ _) = "name"
   show (TFApp fp fps) = "app " <> show fp <> unwords (show <$> fps)
   show (TFFun fps) = "fun " <> unwords (show <$> fps)
+  show (TFTuple fps) = "tuple " <> unwords (show <$> fps)
 
 -- | Using this as a Map key provides a heuristic for matching only the
 -- signatures that share key characteristics rather than blindly comparing
 -- every signature.
 data SigFingerprint =
-  SF { sfArgs :: Int -- the length of the [Sig]
-     , sfFreeVars :: [(Int, Int)] -- num occurances, num of vars that occur that many times
-     , sfResult :: TypeFingerprint FreeVarIdx
+  SF { sfArgs     :: !Int -- the length of the [Sig]
+     , sfFreeVars :: ![(Int, Int)] -- num occurances, num of vars that occur that many times
+     , sfResult   :: !(TypeFingerprint FreeVarIdx)
      } deriving (Eq, Ord)
 
 sigFreeVars :: [Sig FreeVarIdx] -> [(Int, Int)] -- Num occurrances <=> num of vars
@@ -100,6 +105,8 @@ resultFingerprint s = evalState (go s) IM.empty
       Apply c as -> TFApp <$> (TFFun <$> traverse go c)
                           <*> traverse (fmap TFFun . traverse go) as
       VarCtx _   -> pure $ TFFun []
+      Tuple xs   -> TFTuple . sort . map (() <$)
+                <$> traverse (fmap TFFun . traverse go) xs
 
 sigFingerprint :: [Sig FreeVarIdx] -> SigFingerprint
 sigFingerprint sig
@@ -200,6 +207,17 @@ matchArgs True vm (Apply ca aa : restA) (Apply cb ab : restB)
   , matchArgs False vm ca cb
   , and (zipWith (matchArgs False vm) aa ab)
   = matchArgs True vm restA restB
+
+matchArgs True vm (Tuple [] : restA) (Tuple [] : restB)
+  = matchArgs True vm restA restB
+matchArgs True vm (Tuple (a : as) : restA) (Tuple bs : restB)
+  | length as + 1 == length bs
+  = or $ do
+    (i, f : rest) <- zip (inits bs) (tails bs)
+    -- order of elements in a tuple is not important
+    guard $ matchArgs True vm a f
+    guard $ matchArgs True vm [Tuple as] [Tuple $ i ++ rest]
+    pure $ matchArgs True vm restA restB
 
 matchArgs True vm (a : sa) sb
   = or $ do
@@ -312,8 +330,7 @@ mkSig node
   -- tuples
   | nodeHasAnnotation "HsTupleTy" "HsType" node
   , let children = nodeChildren node
-  = fmap (:[]) $ Apply [TyDescriptor "HsTypleTy" Nothing]
-             <$> traverse mkSig children
+  = fmap (:[]) $ Tuple <$> traverse mkSig children
 
   -- list ty
   | nodeHasAnnotation "HsListTy" "HsType" node
