@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7abe06afb04244bbd24b2f14499cf9400d6c8b4050801fafd8843124e170b71b
+-- hash: 09536648b48ae7473fc337855516b5205113a2de9db5d4217f1e39cea2fe6a2c
 
 name:           inventory
 version:        0.1.0.0
@@ -76,6 +76,7 @@ test-suite inventory-test
   main-is: Spec.hs
   other-modules:
       HieSource.T1
+      HieSource.T10
       HieSource.T2
       HieSource.T3
       HieSource.T4
@@ -83,6 +84,7 @@ test-suite inventory-test
       HieSource.T6
       HieSource.T7
       HieSource.T8
+      HieSource.T9
       Paths_inventory
   hs-source-dirs:
       test

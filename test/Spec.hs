@@ -23,6 +23,8 @@ main = defaultMain $ do
     sigMatchTest "T6" nameCache [3]
     sigMatchTest "T7" nameCache [2, 1]
     sigMatchTest "T8" nameCache [2]
+    sigMatchTest "T9" nameCache [3]
+    sigMatchTest "T10" nameCache [5]
 
 sigMatchTest :: FilePath -> NameCache -> [Int] -> IO ()
 sigMatchTest fileName nc sigGroupSizes = do

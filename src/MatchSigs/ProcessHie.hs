@@ -300,7 +300,13 @@ mkSig node
   -- function ty
   | nodeHasAnnotation "HsFunTy" "HsType" node
   , arg : rest : _ <- nodeChildren node
-  = (:) <$> (Arg <$> mkSig arg) <*> mkSig rest
+  = do
+    sigArg <- mkSig arg
+    -- uncurry tuple arguments
+    let sigArg' = case sigArg of
+                    [Tuple xs] -> Arg <$> xs
+                    a -> [Arg a]
+    (sigArg' ++) <$> mkSig rest
 
   -- application
   | nodeHasAnnotation "HsAppTy" "HsType" node
