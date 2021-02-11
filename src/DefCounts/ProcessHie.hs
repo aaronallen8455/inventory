@@ -15,6 +15,7 @@ import           SrcLoc
 
 import           Utils
 
+-- TODO imports, exports
 data DefType
   = Class
   | Data
@@ -24,6 +25,8 @@ data DefType
   | Syn
   | TyClInst
   | TyFamInst
+  | ModImport
+  | ExportThing
   deriving (Eq, Ord, Show)
 
 type DefCounter =
@@ -44,6 +47,12 @@ declLines node
 
   | nodeHasAnnotation "FunBind" "HsBindLR" node
   = AppendMap $ M.singleton Func (numLines $ nodeSpan node, 1)
+
+  | nodeHasAnnotation "ImportDecl" "ImportDecl" node
+  = AppendMap $ M.singleton ModImport (numLines $ nodeSpan node, 1)
+
+  | nodeHasAnnotation "IEName" "IEWrappedName" node
+  = AppendMap $ M.singleton ExportThing (numLines $ nodeSpan node, 1)
 
   | otherwise = foldMap ( foldMap (foldMap tyDeclLines . identInfo)
                         . nodeIdentifiers

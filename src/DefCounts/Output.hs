@@ -47,12 +47,14 @@ defCountOutput (AppendMap defCount) (Sum totalLines) =
 
 pprDefType :: DefType -> SDoc
 pprDefType = \case
-  Func      -> text "Function"
-  Fam       -> text "Type/Data Family"
-  Data      -> text "Data"
-  Class     -> text "Type Class"
-  TyFamInst -> text "Type/Data Family Instance"
-  TyClInst  -> text "Type Class Instance"
-  Syn       -> text "Type Synonym"
-  PatSyn    -> text "Pattern Synonym"
+  Func        -> text "Function"
+  Fam         -> text "Type/Data Family"
+  Data        -> text "Data"
+  Class       -> text "Type Class"
+  TyFamInst   -> text "Type/Data Family Instance"
+  TyClInst    -> text "Type Class Instance"
+  Syn         -> text "Type Synonym"
+  PatSyn      -> text "Pattern Synonym"
+  ModImport   -> text "Imports"
+  ExportThing -> text "Exports"
 
