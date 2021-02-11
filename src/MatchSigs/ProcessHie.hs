@@ -27,14 +27,16 @@ type FreeVarIdx = Int
 
 type SigMap = AppendMap SigFingerprint MatchedSigs
 
+-- TODO linear types
 data Sig varIx
-  = TyDescriptor FastString (Maybe Name)
-  | FreeVar varIx
-  | Arg [Sig varIx]
-  | Qual [Sig varIx]
-  | Apply [Sig varIx] [[Sig varIx]]
-  | VarCtx [varIx]
-  | Tuple [[Sig varIx]]
+  = TyDescriptor !FastString !(Maybe Name)
+  | FreeVar !varIx
+  | Arg ![Sig varIx]
+  | Qual ![Sig varIx]
+  | Apply ![Sig varIx] ![[Sig varIx]]
+  | VarCtx ![varIx]
+  | Tuple ![[Sig varIx]]
+  | KindSig ![Sig varIx] ![Sig varIx]
   deriving (Eq, Ord, Foldable, Functor)
 
 isQual :: Sig a -> Bool
@@ -63,6 +65,7 @@ data TypeFingerprint varIx
   | TFApp !(TypeFingerprint varIx) ![TypeFingerprint varIx]
   | TFFun ![TypeFingerprint varIx]
   | TFTuple ![TypeFingerprint ()]
+  | TFKindSig !(TypeFingerprint varIx) !(TypeFingerprint varIx)
     -- we have to ignore vars completely in case of tuples because there's no
     -- totally reliable way to sort the elements in the presence of free vars
   deriving (Eq, Ord, Functor)
@@ -73,6 +76,8 @@ instance Show varIx => Show (TypeFingerprint varIx) where
   show (TFApp fp fps) = "app " <> show fp <> unwords (show <$> fps)
   show (TFFun fps) = "fun " <> unwords (show <$> fps)
   show (TFTuple fps) = "tuple " <> unwords (show <$> fps)
+  show (TFKindSig ty ki) = "kind sig " <> show ty
+                        <> " :: " <> show ki
 
 -- | Using this as a Map key provides a heuristic for matching only the
 -- signatures that share key characteristics rather than blindly comparing
@@ -107,6 +112,8 @@ resultFingerprint s = evalState (go s) IM.empty
       VarCtx _   -> pure $ TFFun []
       Tuple xs   -> TFTuple . sort . map (() <$)
                 <$> traverse (fmap TFFun . traverse go) xs
+      KindSig ty ki -> TFKindSig <$> (TFFun <$> traverse go ty)
+                                 <*> (TFFun <$> traverse go ki)
 
 sigFingerprint :: [Sig FreeVarIdx] -> SigFingerprint
 sigFingerprint sig
@@ -219,6 +226,11 @@ matchArgs True vm (Tuple (a : as) : restA) (Tuple bs : restB)
     guard $ matchArgs True vm [Tuple as] [Tuple $ i ++ rest]
     pure $ matchArgs True vm restA restB
 
+matchArgs True vm (KindSig ta ka : restA) (KindSig tb kb : restB)
+  = matchArgs False vm ta tb
+ && matchArgs False vm ka kb
+ && matchArgs True vm restA restB
+
 matchArgs True vm (a : sa) sb
   = or $ do
       -- try at different positions of sb, argument order doesn't matter
@@ -294,7 +306,6 @@ nameSigRendered renderType node
   = M.singleton name renderedTy
   | otherwise = mempty
 
--- TODO kind annotations?
 mkSig :: HieAST a -> State (M.Map Name FreeVarIdx) [Sig FreeVarIdx]
 mkSig node
   -- function ty
@@ -344,6 +355,13 @@ mkSig node
   = do
     c <- mkSig child
     pure [Apply [TyDescriptor "HsListTy" Nothing] [c]]
+
+  -- kind sigs
+  | nodeHasAnnotation "HsKindSig" "HsType" node
+  , ty : ki : _ <- nodeChildren node
+  = fmap (:[])
+  $ KindSig <$> mkSig ty
+            <*> mkSig ki
 
   -- any other type
   | (ty, "HsType") : _ <- S.toList . nodeAnnotations $ nodeInfo node

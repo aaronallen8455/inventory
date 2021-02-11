@@ -15,7 +15,7 @@ import           SrcLoc
 
 import           Utils
 
--- TODO imports, exports
+-- TODO standalone kind sigs
 data DefType
   = Class
   | Data
@@ -31,11 +31,10 @@ data DefType
 
 type DefCounter =
   AppendMap DefType
-            ( Sum Int
-            , Sum Int
+            ( Sum Int -- num lines
+            , Sum Int -- num occurrences
             )
 
--- TODO what about standalone kind sigs?
 -- | Counts up the different types of definitions in the given 'HieAST'.
 declLines :: HieAST a -> DefCounter
 declLines node
