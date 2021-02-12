@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b24620654b6009d4bf711a94c71e2ca19e95ab15f03a657556d2d21fc5dc39f0
+-- hash: 6806340930e2342738dbff5e377eaab98fa6e585e154b38e00b501afbb8bcb92
 
 name:           inventory
 version:        0.1.0.0
@@ -30,8 +30,11 @@ library
       DefCounts.Output
       DefCounts.ProcessHie
       HieFile
+      MatchSigs.Fingerprint
+      MatchSigs.Matching
       MatchSigs.Output
       MatchSigs.ProcessHie
+      MatchSigs.Sig
       Output
       UseCounts.Output
       UseCounts.ProcessHie

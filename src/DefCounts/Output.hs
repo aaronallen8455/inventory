@@ -55,6 +55,6 @@ pprDefType = \case
   TyClInst    -> text "Type Class Instance"
   Syn         -> text "Type Synonym"
   PatSyn      -> text "Pattern Synonym"
-  ModImport   -> text "Imports"
-  ExportThing -> text "Exports"
+  ModImport   -> text "Import"
+  ExportThing -> text "Export"
 
