@@ -4,7 +4,6 @@ module Output
 
 import           Data.Monoid
 
-import           DynFlags (unsafeGlobalDynFlags)
 import           Outputable
 import           PprColour
 import           Pretty (Mode(PageMode))
@@ -12,6 +11,7 @@ import           System.IO (stdout)
 
 import           DefCounts.Output
 import           DefCounts.ProcessHie
+import           GHC.DynFlags (baseDynFlags)
 import           MatchSigs.Output
 import           MatchSigs.ProcessHie
 import           UseCounts.Output
@@ -39,10 +39,9 @@ printResults (defCounter, usageCounter, sigDupeMap, totalLines) =
         , text ""
         , sigDuplicateOutput sigDupeMap
         ]
-      dynFlags = unsafeGlobalDynFlags
-      pprStyle = setStyleColoured True $ defaultUserStyle dynFlags
+      pprStyle = setStyleColoured True $ defaultUserStyle baseDynFlags
 
       separator = coloured colGreenFg $ text "********************************************************************************"
 
-   in printSDocLn PageMode dynFlags stdout pprStyle output
+   in printSDocLn PageMode baseDynFlags stdout pprStyle output
 

@@ -32,7 +32,9 @@ type UsageCounter = AppendMap Name UsageCount
 usageCounter :: HieAST a -> UsageCounter
 usageCounter node
   | nodeHasAnnotation "FunBind" "HsBindLR" node
-  = foldMap declaration (listToMaybe $ nodeChildren node)
+  = foldMap findUsage (nodeChildren node)
+ <> foldMap declaration (listToMaybe $ nodeChildren node)
+
   -- only get usages from instance declarations
   | any ((== "InstDecl") . snd) (nodeAnnotations $ nodeInfo node)
   = foldMap findUsage (nodeChildren node)
@@ -84,6 +86,7 @@ findUsage node = (M.foldMapWithKey f . nodeIdentifiers . nodeInfo) node
       g Use                                  = use
       g (ValBind InstanceBind ModuleScope _) = use
       g (Decl InstDec _)                     = use
+      g (RecField RecFieldAssign _)          = use
       g _                                    = mempty
     f _ _ = mempty
 

@@ -58,4 +58,4 @@ getHiePath testName = "test/hie/HieSource/" <> testName <> ".hie"
 getCounters :: String -> NameCache -> IO (DefCounter, UsageCounter, SigMap, Sum Int)
 getCounters testName nc = do
   (hieFile, _) <- readHieFile nc $ getHiePath testName
-  pure . hieFileToCounters (const "") $ hie_file_result hieFile
+  pure . hieFileToCounters $ hie_file_result hieFile

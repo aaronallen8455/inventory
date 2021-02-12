@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6806340930e2342738dbff5e377eaab98fa6e585e154b38e00b501afbb8bcb92
+-- hash: 91228c94f12d736550a69498ec728fbb9057409d22e4c550c13340b835a19b98
 
 name:           inventory
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       DefCounts.Output
       DefCounts.ProcessHie
+      GHC.DynFlags
       HieFile
       MatchSigs.Fingerprint
       MatchSigs.Matching
@@ -52,10 +53,11 @@ library
     , directory
     , filepath
     , ghc
+    , ghc-boot
     , mtl
   default-language: Haskell2010
 
-executable inventory-exe
+executable inventory
   main-is: Main.hs
   other-modules:
       Paths_inventory
@@ -70,6 +72,7 @@ executable inventory-exe
     , directory
     , filepath
     , ghc
+    , ghc-boot
     , inventory
     , mtl
   default-language: Haskell2010
@@ -105,6 +108,7 @@ test-suite inventory-test
     , directory
     , filepath
     , ghc
+    , ghc-boot
     , inventory
     , mtl
     , tasty

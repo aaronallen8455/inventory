@@ -15,21 +15,32 @@ import           UseCounts.ProcessHie (UsageCounter, UsageCount(..))
 
 -- TODO only print top 20 and bottom 20 if there are more than 20
 
+limit :: Int
+limit = 15
+
 usageOutput :: UsageCounter -> SDoc
-usageOutput (AppendMap usageCounter) = vcat uses
+usageOutput (AppendMap usageCounter) =
+  if length uses < limit
+     then vcat uses
+     else vcat [ text $ show limit ++ " Most used definitions:"
+               , vcat $ take limit uses
+               , text ""
+               , text $ show limit ++ " Least used definitions:"
+               , vcat . take limit $ reverse uses
+               ]
   where
     uses = fmap (uncurry usageLine)
          . sortOn (Down . usages . snd)
-         $ M.toList usageCounter
+         . M.toList
+         $ M.filter locallyDefined usageCounter
 
 usageLine :: Name -> UsageCount -> SDoc
 usageLine name usage
-  | not $ locallyDefined usage = empty
-  | let numUses = usages usage
+  = let numUses = usages usage
         u | numUses == 1 = text "use"
           | otherwise = text "uses"
-  = nameOutput name
-  $+$ nest 2 (coloured colCyanFg (intWithCommas numUses) <+> u)
+        in  nameOutput name
+        $+$ nest 2 (coloured colCyanFg (intWithCommas numUses) <+> u)
 
 nameOutput :: Name -> SDoc
 nameOutput name = nameDoc <+> locDoc where
