@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-missing-fields #-}
 
 -- Modified from ghc-lib-api-ext.
@@ -13,12 +14,16 @@ import           SysTools
 import           Util
 
 fakeLlvmConfig :: LlvmConfig
-fakeLlvmConfig = LlvmConfig [] []
+fakeLlvmConfig =
+#if __GLASGOW_HASKELL__ < 810
+  ([], [])
+#else
+  LlvmConfig [] []
+#endif
 
 baseDynFlags :: IO DynFlags
 baseDynFlags = do
   settings <- initSysTools libdir
   pure $ (defaultDynFlags settings fakeLlvmConfig)
     { useColor = Always }
-
 
