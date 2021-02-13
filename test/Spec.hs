@@ -37,12 +37,13 @@ main = defaultMain $
         sigMatchTest "T12" nameCache dynFlags [1,1]
         sigMatchTest "T13" nameCache dynFlags [2]
         sigMatchTest "T14" nameCache dynFlags [2,1]
-        sigMatchTest "T17" nameCache dynFlags []
 
     , testCase "Definition Counting" $ do
         (nameCache, dynFlags) <- ioResources
         defCountTest "T15" nameCache dynFlags
-          . AppendMap $ M.fromList [(Class, (2, 1)), (TyClInst, (2, 1))]
+          . AppendMap $ M.fromList [(Class, (2, 1)), (ClassInst, (2, 1))]
+        defCountTest "T17" nameCache dynFlags
+          . AppendMap $ M.fromList [(Data, (3, 2))]
 
     , testCase "Use Counts" $ do
         (nameCache, dynFlags) <- ioResources

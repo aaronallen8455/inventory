@@ -2,7 +2,6 @@ module MatchSigs.Matching
   ( MatchedSigs(..)
   ) where
 
-import           Control.Monad.State
 import           Data.List
 import qualified Data.IntMap.Strict as IM
 
@@ -60,13 +59,13 @@ checkMatch _ vm (VarCtx va : restA) (VarCtx vb : restB) =
 checkMatch _ _ (VarCtx _ : _) _ = False
 checkMatch _ _ _ (VarCtx _ : _) = False
 
-checkMatch _ vm (Qual qa : restA) bs@(Qual _ : _) =
-  let (qualsB, restB) = span isQual bs
-   in or $ do
-        -- try to match the quals in any order
-        (i, Qual f : rest) <- zip (inits qualsB) (tails qualsB)
-        guard $ checkMatch False vm qa f
-        pure $ checkMatch False vm restA (i ++ rest ++ restB)
+-- Appearance order of quals not considered
+checkMatch _ vm (Qual qa : restA) bs@(Qual _ : _)
+  | let (qualsB, restB) = span isQual bs
+        go (Qual f) = checkMatch False vm qa f
+        go _ = False
+  , (i, _ : rest) <- break go qualsB
+  = checkMatch False vm restA (i ++ rest ++ restB)
 checkMatch _ _ (Qual _ : _) _ = False
 checkMatch _ _ _ (Qual _ : _) = False
 
@@ -99,24 +98,19 @@ checkMatch True vm (Tuple [] : restA) (Tuple [] : restB)
   = checkMatch True vm restA restB
 checkMatch True vm (Tuple (a : as) : restA) (Tuple bs : restB)
   | length as + 1 == length bs
-  = or $ do
-    (i, f : rest) <- zip (inits bs) (tails bs)
-    -- order of elements in a tuple is not important
-    guard $ checkMatch True vm a f
-    guard $ checkMatch True vm [Tuple as] [Tuple $ i ++ rest]
-    pure $ checkMatch True vm restA restB
+  , (i, _ : rest) <- break (checkMatch True vm a) bs
+  , checkMatch True vm [Tuple as] [Tuple $ i ++ rest]
+  = checkMatch True vm restA restB
 
 checkMatch True vm (KindSig ta ka : restA) (KindSig tb kb : restB)
   = checkMatch False vm ta tb
  && checkMatch False vm ka kb
  && checkMatch True vm restA restB
 
-checkMatch True vm (a : sa) sb
-  = or $ do
-      -- try at different positions of sb, argument order doesn't matter
-      (i, f : rest) <- drop 1 $ zip (inits sb) (tails sb)
-      guard $ checkMatch True vm [a] [f]
-      pure $ checkMatch True vm sa (i ++ rest)
+checkMatch True vm (a : sa) (b : sb)
+  -- try at different positions of sb, argument order doesn't matter
+  | (i, _ : rest) <- break (checkMatch True vm [a] . pure) sb
+  = checkMatch True vm sa (b : i ++ rest)
 
 checkMatch _ _ _ _ = False
 

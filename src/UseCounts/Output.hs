@@ -20,11 +20,11 @@ usageOutput :: UsageCounter -> SDoc
 usageOutput (AppendMap usageCounter) =
   if length uses < limit
      then vcat uses
-     else vcat [ text $ show limit ++ " Most used definitions:"
-               , vcat $ take limit uses
-               , text ""
-               , text $ show limit ++ " Least used definitions:"
+     else vcat [ text $ show limit ++ " Least used definitions:"
                , vcat . take limit $ reverse uses
+               , text ""
+               , text $ show limit ++ " Most used definitions:"
+               , vcat $ take limit uses
                ]
   where
     uses = fmap (uncurry usageLine)

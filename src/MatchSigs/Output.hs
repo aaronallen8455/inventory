@@ -26,13 +26,14 @@ sigDuplicateOutput (AppendMap sigMap) =
     sigLine (_, renderedSig, names) =
       vcat
         [ coloured colCyanFg $ dcolon <+> text renderedSig
-        , nest 2 . vcat $ count (length names) : (printName <$> names)
+        , nest 2 $ count (length names)
+        , vcat $ printName <$> names
         , text ""
         ]
 
     printName name =
       let nameDoc = coloured colYellowFg $ ppr name
           locDoc = coloured colMagentaFg . parens $ pprDefinedAt name
-       in nameDoc <+> locDoc
+       in char '•' <+> nameDoc <+> locDoc
     count x = coloured colCyanFg (int x) <+> text "matches:"
 

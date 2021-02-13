@@ -29,19 +29,19 @@ defCountOutput (AppendMap defCount) (Sum totalLines) =
     header = keyword . coloured colMagentaFg
            $ text "Type of Definition"
           $$ nest 30 (text "Num Lines")
-          $$ nest 50 (text "Num Defs")
-          $$ nest 70 (text "% of Total Lines")
+          $$ nest 45 (text "Num Defs")
+          $$ nest 60 (text "% of Total Lines")
 
     defOutput defType (Sum numLines, Sum numOccs)
       = pprDefType defType
      $$ nest 30 (coloured colCyanFg $ intWithCommas numLines)
-     $$ nest 50 (coloured colCyanFg $ intWithCommas numOccs)
-     $$ nest 70 (pprPerc $ (fromIntegral numLines :: Float) / fromIntegral totalLines * 100)
+     $$ nest 45 (coloured colCyanFg $ intWithCommas numOccs)
+     $$ nest 60 (pprPerc $ (fromIntegral numLines :: Float) / fromIntegral totalLines * 100)
 
     otherCount
       = text "Miscellaneous"
      $$ nest 30 (coloured colCyanFg $ intWithCommas otherLines)
-     $$ nest 70 (pprPerc $ (fromIntegral otherLines :: Float) / fromIntegral totalLines * 100)
+     $$ nest 60 (pprPerc $ (fromIntegral otherLines :: Float) / fromIntegral totalLines * 100)
 
     pprPerc = coloured colCyanFg . text . printf "%.1f%%"
 
@@ -52,7 +52,7 @@ pprDefType = \case
   Data        -> text "Data"
   Class       -> text "Type Class"
   TyFamInst   -> text "Type/Data Family Instance"
-  TyClInst    -> text "Type Class Instance"
+  ClassInst   -> text "Type Class Instance"
   Syn         -> text "Type Synonym"
   PatSyn      -> text "Pattern Synonym"
   ModImport   -> text "Import"

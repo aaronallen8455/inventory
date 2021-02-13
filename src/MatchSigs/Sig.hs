@@ -35,7 +35,7 @@ sigsFromHie node
         -- move qualifiers and var decls to front, collapsing var decls
         sig'' = frontLoadVarDecls $ frontLoadQuals sig'
   -- only include functions that take arguments
-  , (> 1) . length $ dropWhile (\x -> isQual x || isVarDecl x) sig''
+  , not $ null sig''
   = M.singleton name sig''
 
   | otherwise = mempty

@@ -23,7 +23,7 @@ data DefType
   | Func
   | PatSyn
   | Syn
-  | TyClInst
+  | ClassInst
   | TyFamInst
   | ModImport
   | ExportThing
@@ -39,7 +39,7 @@ type DefCounter =
 declLines :: HieAST a -> DefCounter
 declLines node
   | nodeHasAnnotation "ClsInstD" "InstDecl" node
-  = AppendMap $ M.singleton TyClInst (numLines $ nodeSpan node, 1)
+  = AppendMap $ M.singleton ClassInst (numLines $ nodeSpan node, 1)
 
   | nodeHasAnnotation "TypeSig" "Sig" node
   = AppendMap $ M.singleton Func (numLines $ nodeSpan node, 0)

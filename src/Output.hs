@@ -24,9 +24,9 @@ printResults dynFlags (defCounter, usageCounter, sigDupeMap, totalLines) = do
   let output = vcat
         [ separator
         , text ""
-        , keyword $ text "Definition Counts"
+        , keyword $ text "Duplicate Type Signatures"
         , text ""
-        , defCountOutput defCounter totalLines
+        , sigDuplicateOutput sigDupeMap
         , text ""
         , separator
         , text ""
@@ -36,9 +36,11 @@ printResults dynFlags (defCounter, usageCounter, sigDupeMap, totalLines) = do
         , text ""
         , separator
         , text ""
-        , keyword $ text "Duplicate Type Signatures"
+        , keyword $ text "Definition Counts"
         , text ""
-        , sigDuplicateOutput sigDupeMap
+        , defCountOutput defCounter totalLines
+        , text ""
+        , separator
         ]
       pprStyle = setStyleColoured True $ defaultUserStyle dynFlags
 

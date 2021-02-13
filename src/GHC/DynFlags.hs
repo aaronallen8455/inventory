@@ -1,12 +1,7 @@
 {-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -Wno-missing-fields #-}
-
--- Modified from ghc-lib-api-ext.
-
 module GHC.DynFlags
   ( baseDynFlags,
-  )
-where
+  ) where
 
 import           DynFlags hiding (settings)
 import           GHC.Paths (libdir)
