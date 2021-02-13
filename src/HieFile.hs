@@ -6,6 +6,7 @@ module HieFile
 
 import           Control.Exception (onException)
 import           Control.Monad.State
+--import           Control.Parallel.Strategies (parList, rpar, using)
 import           Data.Bifunctor
 import qualified Data.ByteString.Char8 as BS
 import           Data.Maybe
@@ -26,9 +27,12 @@ import           UseCounts.ProcessHie
 import           Utils
 
 getCounters :: IO (DefCounter, UsageCounter, SigMap, Sum Int)
-getCounters = do
-  foldMap hieFileToCounters
-    <$> getHieFiles
+getCounters = foldMap hieFileToCounters <$> getHieFiles -- do
+-- TODO experiment with parallelizing
+--  files <- getHieFiles
+--  let counters = (hieFileToCounters <$> files)
+--                   `using` parList rpar
+--  pure $ mconcat counters
 
 hieFileToCounters :: HieFile
                   -> (DefCounter, UsageCounter, SigMap, Sum Int)

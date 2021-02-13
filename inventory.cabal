@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 91228c94f12d736550a69498ec728fbb9057409d22e4c550c13340b835a19b98
+-- hash: 7432244774760844b16b416f5f7f85c6a54f3d07b7913923f8c56849323d1f4e
 
 name:           inventory
 version:        0.1.0.0
@@ -55,6 +55,7 @@ library
     , ghc
     , ghc-boot
     , mtl
+    , parallel
   default-language: Haskell2010
 
 executable inventory
@@ -75,6 +76,7 @@ executable inventory
     , ghc-boot
     , inventory
     , mtl
+    , parallel
   default-language: Haskell2010
 
 test-suite inventory-test
@@ -111,6 +113,7 @@ test-suite inventory-test
     , ghc-boot
     , inventory
     , mtl
+    , parallel
     , tasty
     , tasty-hunit
   default-language: Haskell2010

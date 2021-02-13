@@ -7,11 +7,12 @@ module GHC.DynFlags
   )
 where
 
-import Config
-import DynFlags
-import Fingerprint
-import GHC.Platform
-import ToolSettings
+import           Config
+import           DynFlags
+import           Fingerprint
+import           GHC.Platform
+import           ToolSettings
+import           Util
 
 fakeSettings :: Settings
 fakeSettings =
@@ -46,4 +47,6 @@ fakeLlvmConfig :: LlvmConfig
 fakeLlvmConfig = LlvmConfig [] []
 
 baseDynFlags :: DynFlags
-baseDynFlags = defaultDynFlags fakeSettings fakeLlvmConfig
+baseDynFlags = (defaultDynFlags fakeSettings fakeLlvmConfig)
+  { useColor = Always
+  }

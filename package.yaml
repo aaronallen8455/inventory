@@ -29,6 +29,7 @@ dependencies:
 - ghc
 - ghc-boot
 - mtl
+- parallel
 
 ghc-options: -Wall
              -fwarn-incomplete-patterns

@@ -22,7 +22,8 @@ data UsageCount =
     } deriving Show
 
 instance Semigroup UsageCount where
-  UsageCount na da <> UsageCount nb db = UsageCount (na + nb) (da || db)
+  UsageCount na da <> UsageCount nb db
+    = UsageCount (na + nb) (da || db)
 
 instance Monoid UsageCount where
   mempty = UsageCount 0 False
@@ -87,6 +88,7 @@ findUsage node = (M.foldMapWithKey f . nodeIdentifiers . nodeInfo) node
       g (ValBind InstanceBind ModuleScope _) = use
       g (Decl InstDec _)                     = use
       g (RecField RecFieldAssign _)          = use
+      g (RecField RecFieldMatch _)           = use
       g _                                    = mempty
     f _ _ = mempty
 
