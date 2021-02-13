@@ -37,11 +37,16 @@ main = defaultMain $
         sigMatchTest "T12" nameCache dynFlags [1,1]
         sigMatchTest "T13" nameCache dynFlags [2]
         sigMatchTest "T14" nameCache dynFlags [2,1]
+        sigMatchTest "T17" nameCache dynFlags []
 
     , testCase "Definition Counting" $ do
         (nameCache, dynFlags) <- ioResources
         defCountTest "T15" nameCache dynFlags
           . AppendMap $ M.fromList [(Class, (2, 1)), (TyClInst, (2, 1))]
+
+    , testCase "Use Counts" $ do
+        (nameCache, dynFlags) <- ioResources
+        useCountTest "T16" nameCache dynFlags [0,0,0,3]
     ]
 
 sigMatchTest :: String -> NameCache -> DynFlags -> [Int] -> IO ()
@@ -56,6 +61,12 @@ defCountTest :: FilePath -> NameCache -> DynFlags -> DefCounter -> IO ()
 defCountTest testName nc dynFlags expectedDefCount = do
   (defCount, _, _, _) <- getCounters testName nc dynFlags
   assertEqual testName expectedDefCount defCount
+
+useCountTest :: FilePath -> NameCache -> DynFlags -> [Int] -> IO ()
+useCountTest testName nc dynFlags expectedUseCount = do
+  (_, AppendMap useCount, _, _) <- getCounters testName nc dynFlags
+  assertEqual testName expectedUseCount
+    (map usages . M.elems $ M.filter locallyDefined useCount)
 
 getHiePath :: String -> FilePath
 getHiePath testName = "test/hie/HieSource/" <> testName <> ".hie"

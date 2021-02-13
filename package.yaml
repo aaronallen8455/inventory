@@ -29,7 +29,6 @@ dependencies:
 - ghc >= 8.8 && < 8.11
 - ghc-paths
 - mtl
-- parallel
 
 ghc-options: -Wall
              -fwarn-incomplete-patterns

@@ -23,7 +23,6 @@ import           Utils
 
 type FreeVarIdx = Int
 
--- TODO only include functions with arguments?
 sigsFromHie :: HieAST a -> M.Map Name [Sig FreeVarIdx]
 sigsFromHie node
   | nodeHasAnnotation "TypeSig" "Sig" node
@@ -35,7 +34,8 @@ sigsFromHie node
              | otherwise = VarCtx (M.elems freeVars) : sig
         -- move qualifiers and var decls to front, collapsing var decls
         sig'' = frontLoadVarDecls $ frontLoadQuals sig'
-  , not $ null sig''
+  -- only include functions that take arguments
+  , (> 1) . length $ dropWhile (\x -> isQual x || isVarDecl x) sig''
   = M.singleton name sig''
 
   | otherwise = mempty

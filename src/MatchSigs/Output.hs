@@ -13,8 +13,6 @@ import           PprColour
 
 import           MatchSigs.ProcessHie (SigMap, MatchedSigs(..))
 
--- TODO only print first 20 results for a given signature
-
 sigDuplicateOutput :: SigMap -> SDoc
 sigDuplicateOutput (AppendMap m) | null m = text "(No duplicated signatures)"
 sigDuplicateOutput (AppendMap sigMap) =
