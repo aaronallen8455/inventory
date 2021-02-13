@@ -15,6 +15,7 @@ import           System.Directory (canonicalizePath, doesDirectoryExist, doesFil
 import           System.Environment (lookupEnv)
 import           System.FilePath (isExtensionOf)
 
+import           DynFlags (DynFlags)
 import           HieBin
 import           HieTypes
 import           HieUtils
@@ -26,17 +27,18 @@ import           MatchSigs.ProcessHie
 import           UseCounts.ProcessHie
 import           Utils
 
-getCounters :: IO (DefCounter, UsageCounter, SigMap, Sum Int)
-getCounters = foldMap hieFileToCounters <$> getHieFiles -- do
+getCounters :: DynFlags -> IO (DefCounter, UsageCounter, SigMap, Sum Int)
+getCounters dynFlags = foldMap (hieFileToCounters dynFlags) <$> getHieFiles -- do
 -- TODO experiment with parallelizing
 --  files <- getHieFiles
 --  let counters = (hieFileToCounters <$> files)
 --                   `using` parList rpar
 --  pure $ mconcat counters
 
-hieFileToCounters :: HieFile
+hieFileToCounters :: DynFlags
+                  -> HieFile
                   -> (DefCounter, UsageCounter, SigMap, Sum Int)
-hieFileToCounters hieFile =
+hieFileToCounters dynFlags hieFile =
   let hies = hie_asts hieFile
       asts = getAsts hies
       types = hie_types hieFile
@@ -44,7 +46,7 @@ hieFileToCounters hieFile =
 
    in ( foldMap (modNodeChildren declLines) asts
       , foldMap (modNodeChildren usageCounter) asts
-      , foldMap mkSigMap $ getAsts fullHies
+      , foldMap (mkSigMap dynFlags) $ getAsts fullHies
       , Sum . length . BS.lines $ hie_hs_src hieFile
       )
 

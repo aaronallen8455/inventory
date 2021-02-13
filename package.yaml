@@ -26,8 +26,8 @@ dependencies:
 - containers
 - directory
 - filepath
-- ghc >= 8.10 && < 8.11
-- ghc-boot >= 8.10 && < 8.11
+- ghc >= 8.8 && < 8.11
+- ghc-paths
 - mtl
 - parallel
 

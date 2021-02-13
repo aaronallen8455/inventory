@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 319fd195ffd74d6357d059ed30ede1063dd9c5442f3dfc614cd3102983b295e2
+-- hash: 9016e306122c20b8d83fa8b0f3f0f8318c18c26875439cafa043735690a491a5
 
 name:           inventory
 version:        0.1.0.0
@@ -52,8 +52,8 @@ library
     , containers
     , directory
     , filepath
-    , ghc >=8.10 && <8.11
-    , ghc-boot >=8.10 && <8.11
+    , ghc >=8.8 && <8.11
+    , ghc-paths
     , mtl
     , parallel
   default-language: Haskell2010
@@ -72,8 +72,8 @@ executable inventory
     , containers
     , directory
     , filepath
-    , ghc >=8.10 && <8.11
-    , ghc-boot >=8.10 && <8.11
+    , ghc >=8.8 && <8.11
+    , ghc-paths
     , inventory
     , mtl
     , parallel
@@ -109,8 +109,8 @@ test-suite inventory-test
     , containers
     , directory
     , filepath
-    , ghc >=8.10 && <8.11
-    , ghc-boot >=8.10 && <8.11
+    , ghc >=8.8 && <8.11
+    , ghc-paths
     , inventory
     , mtl
     , parallel
