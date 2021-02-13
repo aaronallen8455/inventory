@@ -13,8 +13,6 @@ import           PprColour
 
 import           UseCounts.ProcessHie (UsageCounter, UsageCount(..))
 
--- TODO only print top 20 and bottom 20 if there are more than 20
-
 limit :: Int
 limit = 15
 
