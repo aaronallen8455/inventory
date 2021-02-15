@@ -23,10 +23,10 @@ instance Semigroup MatchedSigs where
 instance Monoid MatchedSigs where
   mempty = MatchedSigs mempty
 
--- | Create of union of two 'MatchedSigs' by checking if there a match in one
+-- | Create the union of two 'MatchedSigs' by checking if there a match in one
 -- group for each sig in the other.
 -- This is O(n^2) since there is no suitable ordering for sigs due to different
--- potential ordering of free sigs.
+-- potential ordering of free vars.
 unionMatchedSigs :: MatchedSigs -> MatchedSigs -> MatchedSigs
 unionMatchedSigs (MatchedSigs a) (MatchedSigs b)
   = MatchedSigs

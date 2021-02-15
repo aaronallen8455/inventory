@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 07aaf8b0eed95830c63b4bfd387a62502f0251cd3c8a3434456e0d01748f45bb
+-- hash: 461e2b4ad41d4eb538700e2aba0fbe1ce067fae5e7db77fd9acb3b685417c978
 
 name:           inventory
 version:        0.1.0.0
@@ -16,6 +16,7 @@ maintainer:     aaronallen8455@gmail.com
 copyright:      2021 Aaron Allen
 license:        BSD3
 license-file:   LICENSE
+tested-with:    ghc ==8.8.4 ghc ==8.10.3
 build-type:     Simple
 extra-source-files:
     README.md

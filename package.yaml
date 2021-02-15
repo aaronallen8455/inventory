@@ -5,6 +5,7 @@ license:             BSD3
 author:              "Aaron Allen"
 maintainer:          "aaronallen8455@gmail.com"
 copyright:           "2021 Aaron Allen"
+tested-with: ghc ==8.8.4 ghc ==8.10.3
 
 extra-source-files:
 - README.md
