@@ -6,6 +6,7 @@ module MatchSigs.Sig
   ( FreeVarIdx
   , Sig(..)
   , sigsFromHie
+  , sigFingerprint
   , isQual
   ) where
 
@@ -34,7 +35,6 @@ sigsFromHie node
              | otherwise = VarCtx (M.elems freeVars) : sig
         -- move qualifiers and var decls to front, collapsing var decls
         sig'' = frontLoadVarDecls $ frontLoadQuals sig'
-  -- only include functions that take arguments
   , not $ null sig''
   = M.singleton name sig''
 
@@ -165,7 +165,19 @@ recurseSig f (Qual s) = Qual . f $ recurseSig f <$> s
 recurseSig f (Apply a as) =
   Apply (f $ recurseSig f <$> a)
         (f . map (recurseSig f) <$> as)
+recurseSig f (Tuple es) =
+  Tuple (map (f . map (recurseSig f)) es)
 recurseSig _ s = s
+
+-- | Used to produce an orderable key for matching up signatures that are
+-- likely to be equivalent. To allow for this, free vars must be homogenized
+-- which is what 'void' does here.
+sigFingerprint :: [Sig a] -> [Sig ()]
+sigFingerprint = go . map void
+  where
+    go = sort . map (sortTuple . recurseSig go)
+    sortTuple (Tuple es) = Tuple $ sort es
+    sortTuple x = x
 
 -- | Move qualifiers to the front of a sig, and recursively for sub-sigs
 frontLoadQuals :: [Sig a] -> [Sig a]

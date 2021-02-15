@@ -36,8 +36,9 @@ main = defaultMain $
         sigMatchTest "T11" nameCache dynFlags [1,1]
         sigMatchTest "T12" nameCache dynFlags [1,1]
         sigMatchTest "T13" nameCache dynFlags [2]
-        sigMatchTest "T14" nameCache dynFlags [2,1]
+        sigMatchTest "T14" nameCache dynFlags [1,2]
         sigMatchTest "T18" nameCache dynFlags [4]
+        sigMatchTest "T19" nameCache dynFlags [3]
 
     , testCase "Definition Counting" $ do
         (nameCache, dynFlags) <- ioResources

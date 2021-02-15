@@ -13,12 +13,11 @@ import           HieUtils
 
 import           DynFlags
 import           Name
-import           MatchSigs.Fingerprint (SigFingerprint, sigFingerprint)
 import           MatchSigs.Matching (MatchedSigs(..))
-import           MatchSigs.Sig (sigsFromHie)
+import           MatchSigs.Sig (Sig, sigFingerprint, sigsFromHie)
 import           Utils
 
-type SigMap = AppendMap SigFingerprint MatchedSigs
+type SigMap = AppendMap [Sig ()] MatchedSigs
 
 -- | Collect all the function definitions in the 'HieAST' that have isomorphic
 -- type signatures.

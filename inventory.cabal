@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 461e2b4ad41d4eb538700e2aba0fbe1ce067fae5e7db77fd9acb3b685417c978
+-- hash: 893f4045a55f4d5436023cfc13f2a6c033a8731c67f224ac9a5cdf9a5cb9dd0f
 
 name:           inventory
 version:        0.1.0.0
@@ -32,7 +32,6 @@ library
       DefCounts.ProcessHie
       GHC.DynFlags
       HieFile
-      MatchSigs.Fingerprint
       MatchSigs.Matching
       MatchSigs.Output
       MatchSigs.ProcessHie
@@ -92,6 +91,7 @@ test-suite inventory-test
       HieSource.T16
       HieSource.T17
       HieSource.T18
+      HieSource.T19
       HieSource.T2
       HieSource.T3
       HieSource.T4

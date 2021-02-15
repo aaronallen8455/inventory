@@ -2,10 +2,8 @@ module MatchSigs.Output
   ( sigDuplicateOutput
   ) where
 
-import           Data.List
 import           Data.Map.Append.Strict (AppendMap(..))
 import qualified Data.Map.Strict as M
-import           Data.Ord (Down(..))
 
 import           Name
 import           Outputable
@@ -17,7 +15,6 @@ sigDuplicateOutput :: SigMap -> SDoc
 sigDuplicateOutput (AppendMap m) | null m = text "(No duplicated signatures)"
 sigDuplicateOutput (AppendMap sigMap) =
   vcat . map sigLine . filter multipleNames
-       . sortOn (\(_, _, names) -> Down $ length names)
        . concatMap getMatchedSigs
        $ M.elems sigMap
 
