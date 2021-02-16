@@ -30,7 +30,7 @@ main = defaultMain $
         sigMatchTest "T5" nameCache dynFlags [2]
         sigMatchTest "T6" nameCache dynFlags [3]
         sigMatchTest "T7" nameCache dynFlags [2,1]
-        sigMatchTest "T8" nameCache dynFlags [2]
+        sigMatchTest "T8" nameCache dynFlags [2,2]
         sigMatchTest "T9" nameCache dynFlags [3]
         sigMatchTest "T10" nameCache dynFlags [5]
         sigMatchTest "T11" nameCache dynFlags [1,1]
@@ -39,6 +39,7 @@ main = defaultMain $
         sigMatchTest "T14" nameCache dynFlags [1,2]
         sigMatchTest "T18" nameCache dynFlags [4]
         sigMatchTest "T19" nameCache dynFlags [3]
+        sigMatchTest "T20" nameCache dynFlags [2,1,1]
 
     , testCase "Definition Counting" $ do
         (nameCache, dynFlags) <- ioResources

@@ -13,8 +13,8 @@ To use it, compile your project with these ghc options to generate the
 necessary HIE files: `-fwrite-ide-info` and `-hiedir=.hie`. then execute
 `inventory` from your project's root.
 
-Some snippets of the output that was produced by running `inventory` on the
-`stack` codebase:
+Here are some excerpts of the output that was produced by running `inventory`
+on the `stack` codebase:
 
 ### Definition counts
 ![Definiton Counts](images/defcounts.png)
@@ -29,10 +29,10 @@ The output for matching signatures can be useful for discovering functions that
 are duplicates of one another. For instance, the `packageIdent` and
 `packageIdentifier` functions in the above output turned out to be duplicates.
 
-### Known Issues
+### Known Issues/Limitations
 - Context such as constraints and foralls are elided in the printed type
   signatures.
 - Standalone kind signatures are not yet included in definition counts.
-- Support for GHC 9.0 is coming soon. Currently only 8.8 and 8.10 are
+- Support for GHC 9.0 is forthcoming. Currently only 8.8 and 8.10 are
   supported.
 - Does not unfold type synonyms when comparing type signatures.

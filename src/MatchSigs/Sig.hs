@@ -158,35 +158,41 @@ isVarDecl :: Sig a -> Bool
 isVarDecl (VarCtx _) = True
 isVarDecl _ = False
 
--- | Recursively transform the @['Sig' a]@s within a @'Sig' a@
-recurseSig :: ([Sig a] -> [Sig a]) -> Sig a -> Sig a
-recurseSig f (Arg s) = Arg . f $ recurseSig f <$> s
-recurseSig f (Qual s) = Qual . f $ recurseSig f <$> s
-recurseSig f (Apply a as) =
-  Apply (f $ recurseSig f <$> a)
-        (f . map (recurseSig f) <$> as)
-recurseSig f (Tuple es) =
-  Tuple (map (f . map (recurseSig f)) es)
-recurseSig _ s = s
+-- | Recursively transform a '[Sig a]'.
+recurseSig :: ([Sig a] -> [Sig a]) -> [Sig a] -> [Sig a]
+recurseSig f = f . map go where
+  go (Arg s) = Arg $ recurseSig f s
+  go (Qual s) = Qual $ recurseSig f s
+  go (Apply a as) =
+    Apply (recurseSig f a)
+          (recurseSig f <$> as)
+  go (Tuple es) =
+    Tuple (recurseSig f <$> es)
+  go (KindSig ty ks) =
+    KindSig (recurseSig f ty)
+            (recurseSig f ks)
+  go x@TyDescriptor{} = x
+  go x@FreeVar{} = x
+  go x@VarCtx{} = x
 
 -- | Used to produce an orderable key for matching up signatures that are
 -- likely to be equivalent. To allow for this, free vars must be homogenized
 -- which is what 'void' does here.
 sigFingerprint :: [Sig a] -> [Sig ()]
-sigFingerprint = go . map void
+sigFingerprint = recurseSig go . map void
   where
-    go = sort . map (sortTuple . recurseSig go)
+    go = sort . map sortTuple
     sortTuple (Tuple es) = Tuple $ sort es
     sortTuple x = x
 
 -- | Move qualifiers to the front of a sig, and recursively for sub-sigs
 frontLoadQuals :: [Sig a] -> [Sig a]
-frontLoadQuals = go . map (recurseSig frontLoadQuals) where
+frontLoadQuals = recurseSig go where
   go = uncurry (++) . partition isQual
 
 -- | Move free var decls to the front of a sig, and recursively for sub-sigs
 frontLoadVarDecls :: [Sig a] -> [Sig a]
-frontLoadVarDecls = go . map (recurseSig frontLoadVarDecls)
+frontLoadVarDecls = recurseSig go
   where
   go sig =
     let (varSigs, rest) = partition isVarDecl sig
