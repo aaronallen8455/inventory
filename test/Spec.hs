@@ -46,11 +46,22 @@ main = defaultMain $
         defCountTest "T15" nameCache dynFlags
           . AppendMap $ M.fromList [(Class, (2, 1)), (ClassInst, (2, 1))]
         defCountTest "T17" nameCache dynFlags
-          . AppendMap $ M.fromList [(Data, (3, 2))]
+          . AppendMap $ M.fromList
+              [ (Class, (1, 1))
+              , (Data, (3, 2))
+              , (Fam, (2, 2))
+              , (Func, (2, 1))
+              , (PatSyn, (1, 1))
+              , (Syn, (1, 1))
+              , (ClassInst, (2, 2))
+              , (TyFamInst, (2, 2))
+              , (ModImport, (1, 1))
+              , (ExportThing, (5, 5))
+              ]
 
     , testCase "Use Counts" $ do
         (nameCache, dynFlags) <- ioResources
-        useCountTest "T16" nameCache dynFlags [0,0,0,3]
+        useCountTest "T16" nameCache dynFlags [1,1,1,3]
     ]
 
 sigMatchTest :: String -> NameCache -> DynFlags -> [Int] -> IO ()

@@ -30,9 +30,8 @@ are duplicates of one another. For instance, the `packageIdent` and
 `packageIdentifier` functions in the above output turned out to be duplicates.
 
 ### Known Issues/Limitations
-- Context such as constraints and foralls are elided in the printed type
+- Context such as constraints and foralls do not appear in the printed type
   signatures.
 - Standalone kind signatures are not yet included in definition counts.
-- Support for GHC 9.0 is forthcoming. Currently only 8.8 and 8.10 are
-  supported.
+- Not yet tested with GHC versions other than 8.8 and 8.10.
 - Does not unfold type synonyms when comparing type signatures.

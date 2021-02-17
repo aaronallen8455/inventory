@@ -39,6 +39,7 @@ type DefCounter =
 declLines :: HieAST a -> DefCounter
 declLines node
   | nodeHasAnnotation "ClsInstD" "InstDecl" node
+  || nodeHasAnnotation "DerivDecl" "DerivDecl" node
   = AppendMap $ M.singleton ClassInst (numLines $ nodeSpan node, 1)
 
   | nodeHasAnnotation "TypeSig" "Sig" node

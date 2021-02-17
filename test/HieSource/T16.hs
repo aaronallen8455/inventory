@@ -3,7 +3,7 @@ module HieSource.T16 where
 newtype T = T { f :: () }
 
 instance Show T where
-  show _ = ""
+  show x = show $ foo x
 
 foo :: T -> T
-foo a = a
+foo a@T{ f = () } = a

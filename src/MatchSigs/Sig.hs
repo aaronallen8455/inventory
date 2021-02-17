@@ -24,6 +24,31 @@ import           Utils
 
 type FreeVarIdx = Int
 
+-- TODO linear types
+-- | The internal representation of a type. Function types are represented as a
+-- linked list with the init elems being the context followed by arguments of
+-- the function and the last being the result type.
+data Sig varIx
+  = TyDescriptor !FastString !(Maybe Name)
+  | FreeVar !varIx
+  | Arg ![Sig varIx]
+  | Qual ![Sig varIx]
+  | Apply ![Sig varIx] ![[Sig varIx]]
+  | VarCtx ![varIx]
+  | Tuple ![[Sig varIx]]
+  | KindSig ![Sig varIx] ![Sig varIx]
+  deriving (Eq, Ord, Foldable, Functor)
+
+isQual :: Sig a -> Bool
+isQual (Qual _) = True
+isQual _ = False
+
+isVarDecl :: Sig a -> Bool
+isVarDecl (VarCtx _) = True
+isVarDecl _ = False
+
+-- | Produce a 'Map' from function 'Name's to their type signature's
+-- internal representation.
 sigsFromHie :: HieAST a -> M.Map Name [Sig FreeVarIdx]
 sigsFromHie node
   | nodeHasAnnotation "TypeSig" "Sig" node
@@ -46,7 +71,8 @@ sigsFromHie node
                     . nodeIdentifiers
                     $ nodeInfo node
 
--- | Traverses the 'HieAST', building the 'Sig' representation
+-- | Traverses the 'HieAST', building the representation for a function sig.
+-- The `State` is for tracking free vars.
 mkSig :: HieAST a -> State (M.Map Name FreeVarIdx) [Sig FreeVarIdx]
 mkSig node
   -- function ty
@@ -54,7 +80,7 @@ mkSig node
   , arg : rest : _ <- nodeChildren node
   = do
     sigArg <- mkSig arg
-    -- uncurry tuple arguments
+    -- curry tuple arguments
     let sigArg' = case sigArg of
                     [Tuple xs] -> Arg <$> xs
                     a -> [Arg a]
@@ -137,26 +163,6 @@ mkSig node
       | S.null . nodeAnnotations $ nodeInfo c
       = fmap Qual <$> traverse mkSig (nodeChildren c)
       | otherwise = fmap (:[]) $ Qual <$> mkSig c
-
--- TODO linear types
-data Sig varIx
-  = TyDescriptor !FastString !(Maybe Name)
-  | FreeVar !varIx
-  | Arg ![Sig varIx]
-  | Qual ![Sig varIx]
-  | Apply ![Sig varIx] ![[Sig varIx]]
-  | VarCtx ![varIx]
-  | Tuple ![[Sig varIx]]
-  | KindSig ![Sig varIx] ![Sig varIx]
-  deriving (Eq, Ord, Foldable, Functor)
-
-isQual :: Sig a -> Bool
-isQual (Qual _) = True
-isQual _ = False
-
-isVarDecl :: Sig a -> Bool
-isVarDecl (VarCtx _) = True
-isVarDecl _ = False
 
 -- | Recursively transform a '[Sig a]'.
 recurseSig :: ([Sig a] -> [Sig a]) -> [Sig a] -> [Sig a]
