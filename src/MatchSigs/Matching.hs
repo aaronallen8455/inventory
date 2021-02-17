@@ -139,11 +139,7 @@ varMatchings :: IM.IntMap FreeVarIdx
              -> [FreeVarIdx]
              -> [IM.IntMap FreeVarIdx]
 varMatchings existing xs ys
-  | len /= length ys = [] -- should have same number of vars to be considered
-  | otherwise = IM.union existing . IM.fromList . zip range
+  | length xs /= length ys = [] -- should have same number of vars to be considered
+  | otherwise = IM.union existing . IM.fromList . zip xs
             <$> permutations ys
-  where
-    len = length xs
-    mSize = IM.size existing
-    range = [mSize .. mSize + len - 1]
 

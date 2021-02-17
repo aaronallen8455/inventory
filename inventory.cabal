@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0964afa08cb7b1b78e083d660f043ba8971f02100acb4e85b94e06c231fec908
+-- hash: ff943ce5775669b4f8f02596649c898bd3b945dbaae9f05d20689e5c4e1ea159
 
 name:           inventory
 version:        0.1.0.0
@@ -104,7 +104,7 @@ test-suite inventory-test
       Paths_inventory
   hs-source-dirs:
       test
-  ghc-options: -Wall -fwarn-incomplete-patterns -threaded -rtsopts -with-rtsopts=-N -hiedir=test/hie
+  ghc-options: -Wall -fwarn-incomplete-patterns -threaded -rtsopts -with-rtsopts=-N -fwrite-ide-info -hiedir=test/hie
   build-depends:
       appendmap >=0.1.5 && <0.2
     , base >=4.7 && <5
