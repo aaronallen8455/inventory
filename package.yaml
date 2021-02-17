@@ -21,20 +21,18 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/aaronallen8455/inventory#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- appendmap
-- bytestring
-- containers
-- directory
-- filepath
-- ghc >= 8.8 && < 8.11
-- ghc-paths
-- mtl
+- base             >= 4.7 && < 5
+- appendmap        >= 0.1.5 && < 0.2
+- containers       >= 0.6.2 && < 0.7
+- bytestring       >= 0.10.12 && < 0.11
+- directory        >= 1.3.6 && < 1.4
+- filepath         >= 1.4.2 && < 1.5
+- ghc              >= 8.8
+- ghc-paths        >= 0.1.0 && < 0.2
+- mtl              >= 2.2.2 && < 2.3
 
 ghc-options: -Wall
              -fwarn-incomplete-patterns
-             -fwrite-ide-info
-             -hiedir=.hie
 
 library:
   source-dirs: src
