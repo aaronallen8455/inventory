@@ -3,13 +3,16 @@
 This is a utility that provides a variety of statistics about your Haskell
 project. These include:
 
-- A list of type signatures that are shared among multiple functions,
-  enumerating those functions along with their definition sites.
+- A list of type signatures that are shared among multiple locally defined
+  functions, enumerating those functions along with their definition sites.
 - Lists of the most used and least used definitions in the project.
 - A breakdown of local definitions, telling you the number of each type of
   definition as well as how many lines of code they take up.
 
 ## Using inventory
+
+Install with `stack update && stack install inventory` or `cabal update &&
+cabal install inventory`.
 
 Inventory uses `.hie` files to gather information about all haskell files in
 the project. Once you have generated `.hie` files for your project, execute
@@ -49,19 +52,23 @@ stack clean
 stack build
 ```
 
+By default `inventory` looks for HIE files in the `.hie` directory. You can
+override this using the `HIE_DIR` environment variable: `HIE_DIR=path/to/dir
+inventory`.
+
 ## Examples
 
 Here are some excerpts of the output that was produced by running `inventory`
 on the `stack` codebase:
 
 ### Definition counts
-![Definiton Counts](images/defcounts.png)
+![Definiton counts image](images/defcounts.png)
 
 ### Most used definitions
-![Most Used](images/mostused.png)
+![Most used image](images/mostused.png)
 
 ### Matching type signatures
-![Equivalent Signatures](images/dupesigs.png)
+![Equivalent signatures image](images/dupesigs.png)
 
 The output for matching signatures can be useful for discovering functions that
 are duplicates of one another. For instance, the `packageIdent` and
@@ -71,5 +78,7 @@ are duplicates of one another. For instance, the `packageIdent` and
 - Context such as constraints and foralls do not appear in the printed type
   signatures.
 - Standalone kind signatures are not yet included in definition counts.
-- GHC versions other than 8.8 and 8.10 are not currently supported.
 - Does not unfold type synonyms when comparing type signatures.
+- GHC versions other than 8.8 and 8.10 are not currently supported.
+- You may encounter errors if the version of GHC used to compile `inventory` is
+  different from the version used to compile your project.

@@ -23,8 +23,8 @@ type SigMap = AppendMap [Sig ()] MatchedSigs
 -- type signatures.
 mkSigMap :: DynFlags -> HieAST HieTypeFix -> SigMap
 mkSigMap dynFlags node =
-  let renderedSigs = modNodeChildren (nameSigRendered dynFlags) node
-      sigReps = modNodeChildren sigsFromHie node
+  let renderedSigs = foldNodeChildren (nameSigRendered dynFlags) node
+      sigReps = foldNodeChildren sigsFromHie node
       mkMatch n s r = (sigFingerprint r, MatchedSigs [(r, s, [n])])
       sigMatches = M.elems $ M.intersectionWithKey mkMatch renderedSigs sigReps
    in AppendMap $ M.fromListWith (<>) sigMatches

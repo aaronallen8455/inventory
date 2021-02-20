@@ -1,6 +1,6 @@
 module Utils
   ( nodeHasAnnotation
-  , modNodeChildren
+  , foldNodeChildren
   ) where
 
 import qualified Data.Set as S
@@ -14,5 +14,5 @@ nodeHasAnnotation constructor ty =
   . nodeAnnotations
   . nodeInfo
 
-modNodeChildren :: Monoid m => (HieAST a -> m) -> HieAST a -> m
-modNodeChildren f = foldMap f . nodeChildren
+foldNodeChildren :: Monoid m => (HieAST a -> m) -> HieAST a -> m
+foldNodeChildren f = foldMap f . nodeChildren

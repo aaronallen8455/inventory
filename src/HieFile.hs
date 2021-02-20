@@ -1,5 +1,6 @@
 module HieFile
-  ( getCounters
+  ( Counters
+  , getCounters
   , hieFileToCounters
   , mkNameCache
   ) where
@@ -45,8 +46,8 @@ hieFileToCounters dynFlags hieFile =
       types = hie_types hieFile
       fullHies = flip recoverFullType types <$> hies
 
-   in ( foldMap (modNodeChildren declLines) asts
-      , foldMap (modNodeChildren usageCounter) asts
+   in ( foldMap (foldNodeChildren declLines) asts
+      , foldMap (foldNodeChildren usageCounter) asts
       , foldMap (mkSigMap dynFlags) $ getAsts fullHies
       , Sum . length . BS.lines $ hie_hs_src hieFile
       )
