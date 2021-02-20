@@ -13,6 +13,7 @@ import           MatchSigs.ProcessHie (SigMap, MatchedSigs(..))
 
 sigDuplicateOutput :: SigMap -> SDoc
 sigDuplicateOutput (AppendMap m) | null m = text "(No duplicated signatures)"
+-- TODO check length after filtering
 sigDuplicateOutput (AppendMap sigMap) =
   vcat . map sigLine . filter multipleNames
        . concatMap getMatchedSigs

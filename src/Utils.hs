@@ -16,4 +16,3 @@ nodeHasAnnotation constructor ty =
 
 modNodeChildren :: Monoid m => (HieAST a -> m) -> HieAST a -> m
 modNodeChildren f = foldMap f . nodeChildren
-

@@ -1,7 +1,9 @@
+{-# LANGUAGE MultiWayIf #-}
 module MatchSigs.Matching
   ( MatchedSigs(..)
   ) where
 
+import           Control.Monad.State.Strict
 import           Data.List
 import qualified Data.IntMap.Strict as IM
 
@@ -34,112 +36,191 @@ unionMatchedSigs (MatchedSigs a) (MatchedSigs b)
   -- fold compatible sigs from b in a, append the ones that are not compatible
   $ foldl' go (a, []) b
   where
-    go (sigs, nonMatches) sig
-      = let check (ss, False) s
-              = case compatibleSigs s sig of
+    go (aSigs, nonMatches) bSig
+      = let check (ss, False) aSig
+              = case compatibleSigs aSig bSig of
                   Just s' -> (s' : ss, True)
-                  Nothing -> (s : ss, False)
-            check (ss, True) s = (s : ss, True)
-         in case foldl' check ([], False) sigs of
-              (res, False) -> (res, sig : nonMatches)
+                  Nothing -> (aSig : ss, False)
+            check (ss, True) aSig = (aSig : ss, True)
+         in case foldl' check ([], False) aSigs of
+              (res, False) -> (res, bSig : nonMatches)
               (res, True) -> (res, nonMatches)
 
 -- | Combines the names in two 'SigMatches' if the sigs match
 compatibleSigs :: SigMatches -> SigMatches -> Maybe SigMatches
-compatibleSigs (sigA, str, namesA) (sigB, _, namesB)
-  | checkMatch mempty sigA sigB
-  = Just (sigA, str, namesA ++ namesB)
-  | otherwise = Nothing
+compatibleSigs (sigA, str, namesA) (sigB, _, namesB) =
+  if evalState (checkMatch sigA sigB) initEnv
+     then Just (sigA, str, namesA ++ namesB)
+     else Nothing
+
+type Level = Int
+type VarLevel = IM.IntMap Int
+type VarAssign = IM.IntMap FreeVarIdx
+
+data Env =
+  MkEnv { level :: !Level -- current var level
+        , vass  :: !VarAssign -- map from B vars to A vars
+        , vlA   :: !VarLevel -- the level at which an A var with introduced
+        , vlB   :: !VarLevel
+        }
+
+initEnv :: Env
+initEnv =
+  MkEnv { level = 0
+        , vass  = mempty
+        , vlA   = mempty
+        , vlB   = mempty
+        }
+
+-- | Identify var from one sig with var in other sig
+tryAssignVar :: FreeVarIdx
+             -> FreeVarIdx
+             -> State Env Bool
+tryAssignVar ai bi = do
+  env <- get
+  let mb = IM.lookup bi $ vass env
+  if -- already assigned
+     | Just x <- mb
+     , x == ai -> pure True
+
+     -- not assigned and levels match
+     -- TODO check that no other var already to assigned to ai
+     | Nothing <- mb
+     , Just lA <- IM.lookup ai $ vlA env
+     , Just lB <- IM.lookup bi $ vlB env
+     , lA == lB
+     -> do put env { vass = IM.insert bi ai $ vass env }
+           pure True
+
+     | otherwise -> pure False
+
+-- | Add vars from both sigs to the context, accounting for level
+introVars :: [FreeVarIdx]
+          -> [FreeVarIdx]
+          -> State Env Bool
+introVars [] [] = pure True
+introVars va vb
+  | length va == length vb
+  = (True <$) . modify' $ \env ->
+      let lvl = level env
+       in env { vlA = IM.fromList (zip va $ repeat lvl) <> vlA env
+              , vlB = IM.fromList (zip vb $ repeat lvl) <> vlB env
+              , level = lvl + 1
+              }
+  | otherwise = pure False
+
+-- | Logical conjuction
+(/\) :: State env Bool
+     -> State env Bool
+     -> State env Bool
+a /\ b = do
+  r <- a
+  if r then b else pure False
+
+checkAnd :: [State Env Bool]
+         -> State Env Bool
+checkAnd = foldl' (/\) (pure True)
+
+-- | Logical disjunction. Discards state if False
+(\/) :: State env Bool
+     -> State env Bool
+     -> State env Bool
+a \/ b = StateT $ \env ->
+  let (ar, as) = runState a env
+      ~(br, bs) = runState b env
+   in if ar then pure (ar, as)
+            else if br then pure (br, bs)
+                 else pure (False, env)
+
+checkOr :: [State env Bool]
+        -> State env Bool
+checkOr = foldl' (\/) (pure False)
 
 -- | Check that two sigs are isomorphic
 -- First step is to check that the contexts match.
-checkMatch :: IM.IntMap FreeVarIdx
+checkMatch :: [Sig FreeVarIdx]
            -> [Sig FreeVarIdx]
-           -> [Sig FreeVarIdx]
-           -> Bool
+           -> State Env Bool
 -- VarCtx and Qual are both expected to occur at the front of the list
-checkMatch vm (VarCtx va : restA) (VarCtx vb : restB) =
-  or $ do
-    vm' <- varMatchings vm va vb
-    pure $ checkMatch vm' restA restB
-checkMatch _ (VarCtx _ : _) _ = False
-checkMatch _ _ (VarCtx _ : _) = False
+checkMatch (VarCtx va : restA) (VarCtx vb : restB)
+  = introVars va vb
+ /\ checkMatch restA restB
+checkMatch (VarCtx _ : _) _ = pure False
+checkMatch _ (VarCtx _ : _) = pure False
 
--- Appearance order of quals not considered
-checkMatch vm (Qual qa : restA) bs@(Qual _ : _)
-  | let (qualsB, restB) = span isQual bs
-        go (Qual f) = checkMatch vm qa f
-        go _ = False
-  , (i, _ : rest) <- break go qualsB
-  = checkMatch vm restA (i ++ rest ++ restB)
-checkMatch _ (Qual _ : _) _ = False
-checkMatch _ _ (Qual _ : _) = False
+-- Appearance order of quals not significant
+checkMatch (Qual qa : restA) bs@(Qual _ : _) =
+  let (qualsB, restB) = span isQual bs
+      splits = zip (inits qualsB) (tails qualsB)
+      go (i, Qual f : rest)
+        = checkMatch qa f
+       /\ checkMatch restA (i ++ rest ++ restB)
+      go _ = pure False
+   in checkOr $ go <$> splits
+checkMatch (Qual _ : _) _ = pure False
+checkMatch _ (Qual _ : _) = pure False
 
-checkMatch vm sa sb = checkResult vm sa sb
+checkMatch sa sb = checkResult sa sb
 
 -- | Extract the result types and make sure they match before going any further.
-checkResult :: IM.IntMap FreeVarIdx
+checkResult :: [Sig FreeVarIdx]
             -> [Sig FreeVarIdx]
-            -> [Sig FreeVarIdx]
-            -> Bool
-checkResult vm sa sb
+            -> State Env Bool
+checkResult sa sb
   | ra : restA <- reverse sa
   , rb : restB <- reverse sb
-  = checkArguments vm [ra] [rb] && checkArguments vm restA restB
-checkResult _ _ _ = True
+  = checkArguments [ra] [rb]
+ /\ checkArguments restA restB
+checkResult _ _ = pure True
 
 -- | After the result type has been removed, check the argument types.
-checkArguments :: IM.IntMap FreeVarIdx
+checkArguments :: [Sig FreeVarIdx]
                -> [Sig FreeVarIdx]
-               -> [Sig FreeVarIdx]
-               -> Bool
-checkArguments _ [] [] = True
-checkArguments vm (FreeVar ai : restA) (FreeVar bi : restB)
-  | vm IM.!? bi == Just ai
-  = checkArguments vm restA restB
+               -> State Env Bool
+checkArguments [] [] = pure True
+checkArguments (FreeVar ai : restA) (FreeVar bi : restB)
+  = tryAssignVar ai bi
+ /\ checkArguments restA restB
 
-checkArguments vm (TyDescriptor sa na : restA) (TyDescriptor sb nb : restB)
+checkArguments (TyDescriptor sa na : restA) (TyDescriptor sb nb : restB)
   | sa == sb
   , na == nb
-  = checkArguments vm restA restB
+  = checkArguments restA restB
+  | otherwise = pure False
 
-checkArguments vm (Arg aa : restA) (Arg ab : restB)
-  | checkMatch vm aa ab
-  = checkArguments vm restA restB
+-- this is where we need to check for a failure and rotate the list
+checkArguments (Arg aa : restA) sb =
+  let splits = zip (inits sb) (tails sb)
+      go (i, Arg ab : rest)
+        = checkMatch aa ab
+       /\ checkArguments restA (i ++ rest)
+      go _  = pure False
+   in checkOr $ go <$> splits
 
-checkArguments vm (Apply ca aa : restA) (Apply cb ab : restB)
+checkArguments (Apply ca aa : restA) (Apply cb ab : restB)
   | length aa == length ab
-  , checkMatch vm ca cb
-  , and (zipWith (checkMatch vm) aa ab)
-  = checkArguments vm restA restB
+  = checkMatch ca cb
+ /\ checkAnd (zipWith checkMatch aa ab)
+ /\ checkArguments restA restB
+  | otherwise = pure False
 
-checkArguments vm (Tuple [] : restA) (Tuple [] : restB)
-  = checkArguments vm restA restB
-checkArguments vm (Tuple (a : as) : restA) (Tuple bs : restB)
+checkArguments (Tuple [] : restA) (Tuple [] : restB)
+  = checkArguments restA restB
+checkArguments (Tuple (a : as) : restA) (Tuple bs : restB)
   | length as + 1 == length bs
-  , (i, _ : rest) <- break (checkMatch vm a) bs
-  , checkArguments vm [Tuple as] [Tuple $ i ++ rest]
-  = checkArguments vm restA restB
+  , let splits = zip (inits bs) (tails bs)
+        go (i, b : rest)
+            = checkMatch a b
+           /\ checkArguments [Tuple as] [Tuple $ i ++ rest]
+           /\ checkArguments restA restB
+        go _ = pure False
+  = checkOr $ go <$> splits
+  | otherwise = pure False
 
-checkArguments vm (KindSig ta ka : restA) (KindSig tb kb : restB)
-  = checkMatch vm ta tb
- && checkMatch vm ka kb
- && checkArguments vm restA restB
+checkArguments (KindSig ta ka : restA) (KindSig tb kb : restB)
+  = checkMatch ta tb
+ /\ checkMatch ka kb
+ /\ checkArguments restA restB
 
-checkArguments vm (a : sa) (b : sb)
-  -- try at different positions of sb, argument order doesn't matter
-  | (i, _ : rest) <- break (checkArguments vm [a] . pure) sb
-  = checkArguments vm sa (b : i ++ rest)
-
-checkArguments _ _ _ = False
-
--- | generate all possible assignments of free variables from one sig to another
-varMatchings :: IM.IntMap FreeVarIdx
-             -> [FreeVarIdx]
-             -> [FreeVarIdx]
-             -> [IM.IntMap FreeVarIdx]
-varMatchings existing xs ys
-  | length xs /= length ys = [] -- should have same number of vars to be considered
-  | otherwise = IM.union existing . IM.fromList . zip xs
-            <$> permutations ys
+checkArguments _ _ = pure False
 

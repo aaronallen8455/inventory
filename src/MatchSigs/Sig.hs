@@ -39,6 +39,16 @@ data Sig varIx
   | KindSig ![Sig varIx] ![Sig varIx]
   deriving (Eq, Ord, Foldable, Functor)
 
+instance Show varIx => Show (Sig varIx) where
+  show (TyDescriptor fs _) = "TyDescriptor " <> show fs
+  show (FreeVar ix) = "Var " <> show ix
+  show (Arg a) = show a <> " -> "
+  show (Qual q) = show q <> " => "
+  show (Apply c args) = "App " <> show c <> " " <> show args
+  show (VarCtx a) = "forall " <> show a <> ". "
+  show (Tuple t) = "Tuple " <> show t
+  show (KindSig x s) = show x <> " :: " <> show s
+
 isQual :: Sig a -> Bool
 isQual (Qual _) = True
 isQual _ = False
@@ -82,7 +92,7 @@ mkSig node
     sigArg <- mkSig arg
     -- curry tuple arguments
     let sigArg' = case sigArg of
-                    [Tuple xs] -> Arg <$> xs
+                    [Tuple xs] | not (null xs) -> Arg <$> xs
                     a -> [Arg a]
     (sigArg' ++) <$> mkSig rest
 
