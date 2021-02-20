@@ -12,8 +12,8 @@ extra-source-files:
 - ChangeLog.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+synopsis:            Project statistics and definition analysis
+category:            Utility
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
@@ -27,7 +27,7 @@ dependencies:
 - bytestring       >= 0.10.12 && < 0.11
 - directory        >= 1.3.6 && < 1.4
 - filepath         >= 1.4.2 && < 1.5
-- ghc              >= 8.8
+- ghc              >= 8.8 && < 8.11
 - ghc-paths        >= 0.1.0 && < 0.2
 - mtl              >= 2.2.2 && < 2.3
 

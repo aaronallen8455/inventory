@@ -71,5 +71,5 @@ are duplicates of one another. For instance, the `packageIdent` and
 - Context such as constraints and foralls do not appear in the printed type
   signatures.
 - Standalone kind signatures are not yet included in definition counts.
-- Not yet tested with GHC versions other than 8.8 and 8.10.
+- GHC versions other than 8.8 and 8.10 are not currently supported.
 - Does not unfold type synonyms when comparing type signatures.
