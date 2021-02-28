@@ -56,11 +56,12 @@ hieFileToCounters dynFlags hieFile =
 getHieFiles :: IO [HieFile]
 getHieFiles = do
   hieDir <- fromMaybe ".hie" <$> lookupEnv "HIE_DIR"
-  let notPathsFile = (/= "Paths_") . take 6
-  filePaths <- filter notPathsFile <$> getHieFilesIn hieDir
+  filePaths <- getHieFilesIn hieDir
     `onException` error "HIE file directory does not exist"
   when (null filePaths) . error $ "No HIE files found in dir: " <> hieDir
-  hieFilesFromPaths filePaths
+  hieFiles <- hieFilesFromPaths filePaths
+  let srcFileExists = doesPathExist . hie_hs_file
+  filterM srcFileExists hieFiles
 
 #if __GLASGOW_HASKELL__ >= 900
 
