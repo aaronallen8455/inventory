@@ -10,9 +10,7 @@ import           Data.Map.Append.Strict (AppendMap(..))
 import qualified Data.Map.Strict as M
 import           Data.Monoid
 
-import           HieTypes
-import           SrcLoc
-
+import           GHC.Api
 import           Utils
 
 -- TODO standalone kind sigs
@@ -56,7 +54,7 @@ declLines node
 
   | otherwise = foldMap ( foldMap (foldMap tyDeclLines . identInfo)
                         . nodeIdentifiers
-                        . nodeInfo )
+                        . getNodeInfo )
               $ nodeChildren node
 
 numLines :: Span -> Sum Int

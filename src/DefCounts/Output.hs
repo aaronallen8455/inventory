@@ -9,9 +9,7 @@ import qualified Data.Map.Strict as M
 import           Data.Monoid
 import           Text.Printf
 
-import           Outputable
-import           PprColour
-
+import           GHC.Output
 import           DefCounts.ProcessHie (DefCounter, DefType(..))
 
 defCountOutput :: DefCounter -> Sum Int -> SDoc

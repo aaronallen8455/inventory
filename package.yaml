@@ -1,11 +1,11 @@
 name:                inventory
-version:             0.1.0.0
+version:             0.1.0.1
 github:              "aaronallen8455/inventory"
 license:             BSD3
 author:              "Aaron Allen"
 maintainer:          "aaronallen8455@gmail.com"
 copyright:           "2021 Aaron Allen"
-tested-with: ghc ==8.8.4 ghc ==8.10.3
+tested-with: ghc ==8.8.4 ghc ==8.10.3 ghc ==9.0.1
 
 extra-source-files:
 - README.md
@@ -27,7 +27,7 @@ dependencies:
 - bytestring       >= 0.10.12 && < 0.11
 - directory        >= 1.3.6 && < 1.4
 - filepath         >= 1.4.2 && < 1.5
-- ghc              >= 8.8 && < 8.11
+- ghc              >= 8.8 && < 9.1
 - ghc-paths        >= 0.1.0 && < 0.2
 - mtl              >= 2.2.2 && < 2.3
 

@@ -5,21 +5,21 @@ module MatchSigs.Output
 import           Data.Map.Append.Strict (AppendMap(..))
 import qualified Data.Map.Strict as M
 
-import           Name
-import           Outputable
-import           PprColour
-
+import           GHC.Api hiding (count)
+import           GHC.Output
 import           MatchSigs.ProcessHie (SigMap, MatchedSigs(..))
 
 sigDuplicateOutput :: SigMap -> SDoc
-sigDuplicateOutput (AppendMap m) | null m = text "(No duplicated signatures)"
--- TODO check length after filtering
 sigDuplicateOutput (AppendMap sigMap) =
-  vcat . map sigLine . filter multipleNames
-       . concatMap getMatchedSigs
-       $ M.elems sigMap
+  if null outputLines
+     then text "(No duplicated signatures)"
+     else vcat outputLines
 
   where
+    outputLines = map sigLine . filter multipleNames
+                . concatMap getMatchedSigs
+                $ M.elems sigMap
+
     multipleNames (_, _, names) = length names > 1
     sigLine (_, renderedSig, names) =
       vcat

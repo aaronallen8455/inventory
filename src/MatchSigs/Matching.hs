@@ -5,8 +5,7 @@ module MatchSigs.Matching
 import           Control.Monad.State.Strict
 import           Data.List
 
-import           Name
-
+import           GHC.Api
 import           MatchSigs.Matching.Env
 import           MatchSigs.Sig
 

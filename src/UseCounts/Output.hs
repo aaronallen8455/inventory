@@ -7,10 +7,8 @@ import           Data.Map.Append.Strict (AppendMap(..))
 import qualified Data.Map.Strict as M
 import           Data.Ord (Down(..))
 
-import           Name
-import           Outputable
-import           PprColour
-
+import           GHC.Api (Name, pprDefinedAt)
+import           GHC.Output
 import           UseCounts.ProcessHie (UsageCounter, UsageCount(..))
 
 limit :: Int

@@ -16,10 +16,7 @@ import           Data.List
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
-import           HieTypes
-
-import           Name
-import           FastString
+import           GHC.Api
 import           Utils
 
 type FreeVarIdx = Int
@@ -63,7 +60,7 @@ sigsFromHie :: HieAST a -> M.Map Name [Sig FreeVarIdx]
 sigsFromHie node
   | nodeHasAnnotation "TypeSig" "Sig" node
   , identNode : sigNode : _ <- nodeChildren node
-  , Right name : _ <- M.keys . nodeIdentifiers $ nodeInfo identNode
+  , Right name : _ <- M.keys . nodeIdentifiers $ getNodeInfo identNode
   , let freeVars = extractFreeVars
   , let sig = evalState (mkSig sigNode) freeVars
         sig' | M.null freeVars = sig
@@ -79,7 +76,7 @@ sigsFromHie node
     extractFreeVars = M.fromList . (`zip` [0..])
                     . rights . M.keys
                     . nodeIdentifiers
-                    $ nodeInfo node
+                    $ getNodeInfo node
 
 -- | Traverses the 'HieAST', building the representation for a function sig.
 -- The `State` is for tracking free vars.
@@ -141,7 +138,7 @@ mkSig node
             <*> mkSig ki
 
   -- any other type
-  | (ty, "HsType") : _ <- S.toList . nodeAnnotations $ nodeInfo node
+  | (ty, "HsType") : _ <- S.toList . nodeAnnotations $ getNodeInfo node
   , let mbName = extractName node
   = do
     freeVars <- get
@@ -156,7 +153,7 @@ mkSig node
   where
     extractName :: HieAST a -> Maybe Name
     extractName n
-      | Right name : _ <- M.keys . nodeIdentifiers $ nodeInfo n
+      | Right name : _ <- M.keys . nodeIdentifiers $ getNodeInfo n
       = Just name
       | otherwise = Nothing
 
@@ -170,7 +167,7 @@ mkSig node
 
     -- produce one ore more Quals from a constraint node
     mkQuals c
-      | S.null . nodeAnnotations $ nodeInfo c
+      | S.null . nodeAnnotations $ getNodeInfo c
       = fmap Qual <$> traverse mkSig (nodeChildren c)
       | otherwise = fmap (:[]) $ Qual <$> mkSig c
 

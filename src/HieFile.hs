@@ -1,28 +1,29 @@
+{-# LANGUAGE CPP #-}
 module HieFile
   ( Counters
   , getCounters
   , hieFileToCounters
+  , hieFilesFromPaths
   , mkNameCache
   ) where
 
 import           Control.Exception (onException)
 import           Control.Monad.State
+#if __GLASGOW_HASKELL__ < 900
 import           Data.Bifunctor
+#endif
 import qualified Data.ByteString.Char8 as BS
+#if __GLASGOW_HASKELL__ >= 900
+import           Data.IORef
+#endif
 import           Data.Maybe
 import           Data.Monoid
 import           System.Directory (canonicalizePath, doesDirectoryExist, doesFileExist, doesPathExist, listDirectory, withCurrentDirectory)
 import           System.Environment (lookupEnv)
 import           System.FilePath (isExtensionOf)
 
-import           DynFlags (DynFlags)
-import           HieBin
-import           HieTypes
-import           HieUtils
-import           NameCache
-import           UniqSupply (mkSplitUniqSupply)
-
 import           DefCounts.ProcessHie
+import           GHC.Api hiding (hieDir)
 import           MatchSigs.ProcessHie
 import           UseCounts.ProcessHie
 import           Utils
@@ -58,12 +59,30 @@ getHieFiles = do
   let notPathsFile = (/= "Paths_") . take 6
   filePaths <- filter notPathsFile <$> getHieFilesIn hieDir
     `onException` error "HIE file directory does not exist"
+  when (null filePaths) . error $ "No HIE files found in dir: " <> hieDir
+  hieFilesFromPaths filePaths
+
+#if __GLASGOW_HASKELL__ >= 900
+
+hieFilesFromPaths :: [FilePath] -> IO [HieFile]
+hieFilesFromPaths filePaths = do
+  nameCacheRef <- newIORef =<< mkNameCache
+  let updater = NCU $ atomicModifyIORef' nameCacheRef
+  traverse (fmap hie_file_result . readHieFile updater)
+           filePaths
+
+#else
+
+hieFilesFromPaths :: [FilePath] -> IO [HieFile]
+hieFilesFromPaths filePaths = do
   nameCache <- mkNameCache
   evalStateT (traverse getHieFile filePaths) nameCache
 
 getHieFile :: FilePath -> StateT NameCache IO HieFile
 getHieFile filePath = StateT $ \nameCache ->
   first hie_file_result <$> readHieFile nameCache filePath
+
+#endif
 
 mkNameCache :: IO NameCache
 mkNameCache = do

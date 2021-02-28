@@ -10,9 +10,7 @@ import qualified Data.Map.Strict as M
 import           Data.Map.Append.Strict (AppendMap(..))
 import           Data.Maybe
 
-import           HieTypes
-
-import           Name
+import           GHC.Api
 import           Utils
 
 data UsageCount =
@@ -37,7 +35,7 @@ usageCounter node
  <> foldMap declaration (listToMaybe $ nodeChildren node)
 
   -- only get usages from instance declarations
-  | any ((== "InstDecl") . snd) (nodeAnnotations $ nodeInfo node)
+  | any ((== "InstDecl") . snd) (nodeAnnotations $ getNodeInfo node)
   = foldMap findUsage (nodeChildren node)
 
   | otherwise
@@ -47,9 +45,9 @@ usageCounter node
 -- | Accrues all the top-level declarations if all different types
 declaration :: HieAST a -> UsageCounter
 declaration node
-  | any ((== "ConDecl") . snd) (nodeAnnotations $ nodeInfo node)
+  | any ((== "ConDecl") . snd) (nodeAnnotations $ getNodeInfo node)
   = dataConDecl node
-declaration node = M.foldMapWithKey f . nodeIdentifiers $ nodeInfo node
+declaration node = M.foldMapWithKey f . nodeIdentifiers $ getNodeInfo node
   where
     f (Right name) details = foldMap g (identInfo details) where
       declare = AppendMap $ M.singleton name (UsageCount 0 True)
@@ -79,7 +77,7 @@ dataConDecl node = foldMap declaration dec
 
 -- | Counts up the uses of all symbols in the AST.
 findUsage :: HieAST a -> UsageCounter
-findUsage node = (M.foldMapWithKey f . nodeIdentifiers . nodeInfo) node
+findUsage node = (M.foldMapWithKey f . nodeIdentifiers . getNodeInfo) node
               <> foldMap findUsage (nodeChildren node)
   where
     f (Right name) details = foldMap g (identInfo details) where

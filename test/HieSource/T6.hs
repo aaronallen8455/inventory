@@ -8,4 +8,4 @@ t6B :: (Num b, Show a) => a -> b -> (a, b)
 t6B = undefined
 
 t6C :: Num b => b -> Show a => a -> (a, b)
-t6C = undefined
+t6C _ = undefined

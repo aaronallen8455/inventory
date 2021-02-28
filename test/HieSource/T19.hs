@@ -2,7 +2,7 @@
 module HieSource.T19 where
 
 t19A :: forall a. a -> forall b. b -> Either a b
-t19A = undefined
+t19A _ _ = undefined
 
 t19B :: forall b a. a -> b -> Either a b
 t19B = undefined

@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5170dfcf2cd239f3acaa89982a23f501fd0928316833b05a3c3aa0d6364032d7
+-- hash: 759cdb3ecce260bdc53d240f21647b10d270c91c50dda611f98d0a7cff6988fa
 
 name:           inventory
-version:        0.1.0.0
+version:        0.1.0.1
 synopsis:       Project statistics and definition analysis
 description:    Please see the README on GitHub at <https://github.com/aaronallen8455/inventory#readme>
 category:       Utility
@@ -18,7 +18,7 @@ maintainer:     aaronallen8455@gmail.com
 copyright:      2021 Aaron Allen
 license:        BSD3
 license-file:   LICENSE
-tested-with:    ghc ==8.8.4 ghc ==8.10.3
+tested-with:    ghc ==8.8.4 ghc ==8.10.3 ghc ==9.0.1
 build-type:     Simple
 extra-source-files:
     README.md
@@ -32,7 +32,9 @@ library
   exposed-modules:
       DefCounts.Output
       DefCounts.ProcessHie
+      GHC.Api
       GHC.DynFlags
+      GHC.Output
       HieFile
       MatchSigs.Matching
       MatchSigs.Matching.Env
@@ -55,7 +57,7 @@ library
     , containers >=0.6.2 && <0.7
     , directory >=1.3.6 && <1.4
     , filepath >=1.4.2 && <1.5
-    , ghc >=8.8 && <8.11
+    , ghc >=8.8 && <9.1
     , ghc-paths >=0.1.0 && <0.2
     , mtl >=2.2.2 && <2.3
   default-language: Haskell2010
@@ -74,7 +76,7 @@ executable inventory
     , containers >=0.6.2 && <0.7
     , directory >=1.3.6 && <1.4
     , filepath >=1.4.2 && <1.5
-    , ghc >=8.8 && <8.11
+    , ghc >=8.8 && <9.1
     , ghc-paths >=0.1.0 && <0.2
     , inventory
     , mtl >=2.2.2 && <2.3
@@ -116,7 +118,7 @@ test-suite inventory-test
     , containers >=0.6.2 && <0.7
     , directory >=1.3.6 && <1.4
     , filepath >=1.4.2 && <1.5
-    , ghc >=8.8 && <8.11
+    , ghc >=8.8 && <9.1
     , ghc-paths >=0.1.0 && <0.2
     , inventory
     , mtl >=2.2.2 && <2.3

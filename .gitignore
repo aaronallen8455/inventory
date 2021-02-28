@@ -3,3 +3,4 @@
 *.hie
 *~
 tags
+dist-newstyle

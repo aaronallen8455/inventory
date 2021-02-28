@@ -8,11 +8,7 @@ module MatchSigs.ProcessHie
 import qualified Data.Map.Strict as M
 import           Data.Map.Append.Strict (AppendMap(..))
 
-import           HieTypes
-import           HieUtils
-
-import           DynFlags
-import           Name
+import           GHC.Api
 import           MatchSigs.Matching (MatchedSigs(..))
 import           MatchSigs.Sig (Sig, sigFingerprint, sigsFromHie)
 import           Utils
@@ -34,11 +30,11 @@ nameSigRendered :: DynFlags -> HieAST HieTypeFix -> M.Map Name String
 nameSigRendered dynFlags node
   | nodeHasAnnotation "FunBind" "HsBindLR" node
   , Just ident <- mIdent
-  , Right name : _ <- M.keys . nodeIdentifiers $ nodeInfo ident
+  , Right name : _ <- M.keys . nodeIdentifiers $ getNodeInfo ident
   , let renderedTy = unwords
                    . map (renderHieType dynFlags)
                    . nodeType
-                   $ nodeInfo node
+                   $ getNodeInfo node
   = M.singleton name renderedTy
 
   | otherwise = mempty

@@ -79,6 +79,6 @@ are duplicates of one another. For instance, the `packageIdent` and
   signatures.
 - Standalone kind signatures are not yet included in definition counts.
 - Does not unfold type synonyms when comparing type signatures.
-- GHC versions other than 8.8 and 8.10 are not currently supported.
+- GHC versions other than 8.8, 8.10, and 9.0 are not currently supported.
 - You may encounter errors if the version of GHC used to compile `inventory` is
   different from the version used to compile your project.
