@@ -20,6 +20,7 @@ import           Data.Maybe
 import           Data.Monoid
 import           System.Directory (canonicalizePath, doesDirectoryExist, doesFileExist, doesPathExist, listDirectory, withCurrentDirectory)
 import           System.Environment (lookupEnv)
+import           System.Exit (exitFailure)
 import           System.FilePath (isExtensionOf)
 
 import           DefCounts.ProcessHie
@@ -57,8 +58,12 @@ getHieFiles :: IO [HieFile]
 getHieFiles = do
   hieDir <- fromMaybe ".hie" <$> lookupEnv "HIE_DIR"
   filePaths <- getHieFilesIn hieDir
-    `onException` error "HIE file directory does not exist"
-  when (null filePaths) . error $ "No HIE files found in dir: " <> hieDir
+    `onException` do
+      putStrLn ("HIE file directory does not exist: " <> show hieDir)
+      exitFailure
+  when (null filePaths) $ do
+    putStrLn $ "No HIE files found in dir: " <> show hieDir
+    exitFailure
   hieFiles <- hieFilesFromPaths filePaths
   let srcFileExists = doesPathExist . hie_hs_file
   filterM srcFileExists hieFiles
@@ -69,8 +74,15 @@ hieFilesFromPaths :: [FilePath] -> IO [HieFile]
 hieFilesFromPaths filePaths = do
   nameCacheRef <- newIORef =<< mkNameCache
   let updater = NCU $ atomicModifyIORef' nameCacheRef
-  traverse (fmap hie_file_result . readHieFile updater)
-           filePaths
+  traverse (getHieFile updater) filePaths
+
+getHieFile :: NameCacheUpdater -> FilePath -> IO HieFile
+getHieFile ncUpdater filePath =
+  handleHieVersionMismatch filePath . fmap hie_file_result
+    =<< readHieFileWithVersion
+          (\(v, _) -> v == hieVersion)
+          ncUpdater
+          filePath
 
 #else
 
@@ -81,9 +93,24 @@ hieFilesFromPaths filePaths = do
 
 getHieFile :: FilePath -> StateT NameCache IO HieFile
 getHieFile filePath = StateT $ \nameCache ->
-  first hie_file_result <$> readHieFile nameCache filePath
+  handleHieVersionMismatch filePath . fmap (first hie_file_result)
+    =<< readHieFileWithVersion
+          (\(v, _) -> v == hieVersion)
+          nameCache
+          filePath
 
 #endif
+
+handleHieVersionMismatch :: FilePath -> Either HieHeader a -> IO a
+handleHieVersionMismatch path = either errMsg pure where
+  errMsg (ver, _ghcVer) = do
+    putStrLn $ unlines
+      [ "Incompatible hie file: " <> path
+      , "hie files must be generated with the same GHC version used to compile inventory"
+      , "Inventory was compiled with GHC version " <> show hieVersion
+      , "The hie files for this project were generated with version " <> show ver
+      ]
+    exitFailure
 
 mkNameCache :: IO NameCache
 mkNameCache = do

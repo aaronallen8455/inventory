@@ -12,7 +12,9 @@ project. These include:
 ## Using inventory
 
 Install with `stack update && stack install inventory` or `cabal update &&
-cabal install inventory`.
+cabal install inventory`. The version used to compile `inventory` must be the
+same as the version used to compile your project. For stack users, this means
+you may have to `stack install` from within your project to use the right GHC.
 
 Inventory uses `.hie` files to gather information about all haskell files in
 the project. Once you have generated `.hie` files for your project, execute
@@ -80,5 +82,3 @@ are duplicates of one another. For instance, the `packageIdent` and
 - Standalone kind signatures are not yet included in definition counts.
 - Does not unfold type synonyms when comparing type signatures.
 - GHC versions other than 8.8, 8.10, and 9.0 are not currently supported.
-- You may encounter errors if the version of GHC used to compile `inventory` is
-  different from the version used to compile your project.

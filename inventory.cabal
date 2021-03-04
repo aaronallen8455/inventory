@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fee986bf906b9590bf18ee9a5c29116d193fe782a4027076edfdc92f4e418ce3
+-- hash: 2c217de02982da803d30a671d986dea8bc36b776a638aafdd2b1599609a962f1
 
 name:           inventory
-version:        0.1.0.1
+version:        0.1.0.2
 synopsis:       Project statistics and definition analysis
 description:    Please see the README on GitHub at <https://github.com/aaronallen8455/inventory#readme>
 category:       Utility
