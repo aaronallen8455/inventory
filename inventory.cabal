@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2c217de02982da803d30a671d986dea8bc36b776a638aafdd2b1599609a962f1
+-- hash: e0077ffac241039a12a7c4c25cbf73cc19bcf4b81132d5a8194a2747df9c137a
 
 name:           inventory
-version:        0.1.0.2
+version:        0.1.0.3
 synopsis:       Project statistics and definition analysis
 description:    Please see the README on GitHub at <https://github.com/aaronallen8455/inventory#readme>
 category:       Utility
@@ -52,6 +52,7 @@ library
   ghc-options: -Wall -fwarn-incomplete-patterns
   build-depends:
       appendmap >=0.1.5 && <0.2
+    , array >=0.5.4 && <0.6
     , base >=4.7 && <5
     , bytestring >=0.10.10 && <0.11
     , containers >=0.6.2 && <0.7
@@ -71,6 +72,7 @@ executable inventory
   ghc-options: -Wall -fwarn-incomplete-patterns -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-A16m
   build-depends:
       appendmap >=0.1.5 && <0.2
+    , array >=0.5.4 && <0.6
     , base >=4.7 && <5
     , bytestring >=0.10.10 && <0.11
     , containers >=0.6.2 && <0.7
@@ -113,6 +115,7 @@ test-suite inventory-test
   ghc-options: -Wall -fwarn-incomplete-patterns -threaded -rtsopts -with-rtsopts=-N -fwrite-ide-info -hiedir=test/hie
   build-depends:
       appendmap >=0.1.5 && <0.2
+    , array >=0.5.4 && <0.6
     , base >=4.7 && <5
     , bytestring >=0.10.10 && <0.11
     , containers >=0.6.2 && <0.7

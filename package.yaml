@@ -1,5 +1,5 @@
 name:                inventory
-version:             0.1.0.2
+version:             0.1.0.3
 github:              "aaronallen8455/inventory"
 license:             BSD3
 author:              "Aaron Allen"
@@ -23,6 +23,7 @@ description:         Please see the README on GitHub at <https://github.com/aaro
 dependencies:
 - base             >= 4.7 && < 5
 - appendmap        >= 0.1.5 && < 0.2
+- array            >= 0.5.4 && < 0.6
 - containers       >= 0.6.2 && < 0.7
 - bytestring       >= 0.10.10 && < 0.11
 - directory        >= 1.3.6 && < 1.4

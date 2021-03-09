@@ -9,6 +9,7 @@ module HieFile
 
 import           Control.Exception (onException)
 import           Control.Monad.State
+import qualified Data.Array as A
 #if __GLASGOW_HASKELL__ < 900
 import           Data.Bifunctor
 #endif
@@ -47,11 +48,14 @@ hieFileToCounters dynFlags hieFile =
       asts = getAsts hies
       types = hie_types hieFile
       fullHies = flip recoverFullType types <$> hies
+      sourceLines = BS.lines $ hie_hs_src hieFile
+      numLines = length sourceLines
+      source = A.listArray (0, numLines - 1) sourceLines
 
-   in ( foldMap (foldNodeChildren declLines) asts
+   in ( foldMap (foldNodeChildren (declLines source)) asts
       , foldMap (foldNodeChildren usageCounter) asts
       , foldMap (mkSigMap dynFlags) $ getAsts fullHies
-      , Sum . length . BS.lines $ hie_hs_src hieFile
+      , Sum numLines
       )
 
 getHieFiles :: IO [HieFile]

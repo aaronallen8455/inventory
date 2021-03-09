@@ -45,7 +45,8 @@ main = defaultMain $
         defCountTest "T17" dynFlags
           . AppendMap $ M.fromList
               [ (Class, (1, 1))
-              , (Data, (3, 2))
+              , (Data, (1, 1))
+              , (Newtype, (2, 1))
               , (Fam, (2, 2))
               , (Func, (2, 1))
               , (PatSyn, (1, 1))

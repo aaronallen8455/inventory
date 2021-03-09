@@ -48,6 +48,7 @@ pprDefType = \case
   Func        -> text "Function"
   Fam         -> text "Type/Data Family"
   Data        -> text "Data"
+  Newtype     -> text "Newtype"
   Class       -> text "Type Class"
   TyFamInst   -> text "Type/Data Family Instance"
   ClassInst   -> text "Type Class Instance"
