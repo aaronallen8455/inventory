@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveFoldable #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -11,6 +12,7 @@ module MatchSigs.Sig
   ) where
 
 import           Control.Monad.State
+import qualified Data.ByteString as BS
 import           Data.Either
 import           Data.List
 import qualified Data.Map.Strict as M
@@ -26,7 +28,7 @@ type FreeVarIdx = Int
 -- linked list with the init elems being the context followed by arguments of
 -- the function and the last being the result type.
 data Sig varIx
-  = TyDescriptor !FastString !(Maybe Name)
+  = TyDescriptor !BS.ByteString !(Maybe Name)
   | FreeVar !varIx
   | Arg ![Sig varIx]
   | Qual ![Sig varIx]
@@ -138,7 +140,12 @@ mkSig node
             <*> mkSig ki
 
   -- any other type
-  | (ty, "HsType") : _ <- S.toList . nodeAnnotations $ getNodeInfo node
+#if MIN_VERSION_ghc(9,2,0)
+  | NodeAnnotation ty "HsType"
+#else
+  | (ty, "HsType")
+#endif
+      : _ <- S.toList . nodeAnnotations $ getNodeInfo node
   , let mbName = extractName node
   = do
     freeVars <- get
@@ -146,7 +153,13 @@ mkSig node
       Just name
         | Just idx <- freeVars M.!? name
         -> pure [FreeVar idx]
-      _ -> pure [TyDescriptor ty mbName]
+      _ -> pure [TyDescriptor
+#if MIN_VERSION_ghc(8,10,0)
+                   (bytesFS ty)
+#else
+                   (fastStringToByteString ty)
+#endif
+                   mbName ]
 
   | otherwise = pure []
 

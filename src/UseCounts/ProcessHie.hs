@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 module UseCounts.ProcessHie
@@ -35,18 +36,32 @@ usageCounter node
  <> foldMap declaration (listToMaybe $ nodeChildren node)
 
   -- only get usages from instance declarations
-  | any ((== "InstDecl") . snd) (nodeAnnotations $ getNodeInfo node)
+  | any ((== "InstDecl") . annType) (nodeAnnotations $ getNodeInfo node)
   = foldMap findUsage (nodeChildren node)
 
   | otherwise
   = foldMap declaration (nodeChildren node)
  <> foldMap findUsage (nodeChildren node)
+  where
+    annType =
+#if MIN_VERSION_ghc(9,2,0)
+      nodeAnnotType
+#else
+      snd
+#endif
 
 -- | Accrues all the top-level declarations if all different types
 declaration :: HieAST a -> UsageCounter
 declaration node
-  | any ((== "ConDecl") . snd) (nodeAnnotations $ getNodeInfo node)
+  | any ((== "ConDecl") . annType) (nodeAnnotations $ getNodeInfo node)
   = dataConDecl node
+  where
+    annType =
+#if MIN_VERSION_ghc(9,2,0)
+      nodeAnnotType
+#else
+      snd
+#endif
 declaration node = M.foldMapWithKey f . nodeIdentifiers $ getNodeInfo node
   where
     f (Right name) details = foldMap g (identInfo details) where

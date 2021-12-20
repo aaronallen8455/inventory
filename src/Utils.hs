@@ -32,7 +32,12 @@ getNodeInfo = nodeInfo
 
 nodeHasAnnotation :: String -> String -> HieAST a -> Bool
 nodeHasAnnotation constructor ty =
-    S.member (fromString constructor, fromString ty)
+    S.member
+#if MIN_VERSION_ghc(9,2,0)
+      (NodeAnnotation (fromString constructor) (fromString ty))
+#else
+      (fromString constructor, fromString ty)
+#endif
   . nodeAnnotations
   . getNodeInfo
 

@@ -1,2 +1,11 @@
-{ nixpkgs ? import <nixpkgs> {}, compiler ? "ghc901" }:
-(import ./default.nix { inherit nixpkgs compiler; }).env
+{ system ? builtins.currentSystem }:
+
+with import <nixpkgs> { inherit system; };
+
+mkShell {
+  buildInputs = [
+    haskell.compiler.ghc921
+    cabal-install
+  ];
+}
+

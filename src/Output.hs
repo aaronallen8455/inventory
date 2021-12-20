@@ -6,7 +6,12 @@ module Output
 import           System.IO (stdout)
 
 import           DefCounts.Output
-import           GHC.Api (DynFlags)
+import           GHC.Api
+#if MIN_VERSION_ghc(9,2,0)
+  (DynFlags, initSDocContext)
+#else
+  (DynFlags)
+#endif
 import           GHC.Output
 import           HieFile (Counters)
 import           MatchSigs.Output
@@ -43,7 +48,11 @@ printResults dynFlags (defCounter, usageCounter, sigDupeMap, totalLines) = do
 
 outputSDoc :: DynFlags -> SDoc -> IO ()
 outputSDoc dynFlags sDoc = do
-#if __GLASGOW_HASKELL__ >= 900
+#if MIN_VERSION_ghc(9,2,0)
+  let pprStyle = setStyleColoured True defaultUserStyle
+      sDocCtx = initSDocContext dynFlags pprStyle
+  printSDocLn sDocCtx (PageMode True) stdout sDoc
+#elif MIN_VERSION_ghc(9,0,0)
   let pprStyle = setStyleColoured True defaultUserStyle
       sDocCtx = initSDocContext dynFlags pprStyle
   printSDocLn sDocCtx PageMode stdout sDoc
