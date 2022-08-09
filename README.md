@@ -81,4 +81,4 @@ are duplicates of one another. For instance, the `packageIdent` and
   signatures for GHC versions less than 9.0.1.
 - Standalone kind signatures are not yet included in definition counts.
 - Does not unfold type synonyms when comparing type signatures.
-- GHC versions other than 8.8, 8.10, and 9.0 are not currently supported.
+- GHC versions less than 8.8.x are not supported.

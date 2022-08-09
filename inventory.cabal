@@ -18,7 +18,7 @@ maintainer:     aaronallen8455@gmail.com
 copyright:      2021 Aaron Allen
 license:        BSD3
 license-file:   LICENSE
-tested-with:    GHC ==8.8.4 || ==8.10.4 || ==9.0.1 || ==9.2.1
+tested-with:    GHC ==8.8.4 || ==8.10.7 || ==9.0.2 || ==9.2.2
 build-type:     Simple
 extra-source-files:
     README.md
