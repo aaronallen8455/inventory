@@ -7,7 +7,7 @@ cabal-version: 1.12
 -- hash: e0077ffac241039a12a7c4c25cbf73cc19bcf4b81132d5a8194a2747df9c137a
 
 name:           inventory
-version:        0.1.0.3
+version:        0.1.0.4
 synopsis:       Project statistics and definition analysis
 description:    Please see the README on GitHub at <https://github.com/aaronallen8455/inventory#readme>
 category:       Utility
@@ -18,7 +18,7 @@ maintainer:     aaronallen8455@gmail.com
 copyright:      2021 Aaron Allen
 license:        BSD3
 license-file:   LICENSE
-tested-with:    GHC ==8.8.4 || ==8.10.7 || ==9.0.2 || ==9.2.2
+tested-with:    GHC ==8.8.4 || ==8.10.7 || ==9.0.2 || ==9.2.4 || ==9.4.4 || ==9.6.1
 build-type:     Simple
 extra-source-files:
     README.md
@@ -58,9 +58,9 @@ library
     , containers >=0.6.2 && <0.7
     , directory >=1.3.6 && <1.4
     , filepath >=1.4.2 && <1.5
-    , ghc >=8.8 && <9.3
+    , ghc >=8.8 && <9.7
     , ghc-paths >=0.1.0
-    , mtl >=2.2.2 && <2.3
+    , mtl >=2.2.2 && <2.4
   default-language: Haskell2010
 
 executable inventory
@@ -78,10 +78,10 @@ executable inventory
     , containers >=0.6.2 && <0.7
     , directory >=1.3.6 && <1.4
     , filepath >=1.4.2 && <1.5
-    , ghc >=8.8 && <9.3
+    , ghc >=8.8 && <9.7
     , ghc-paths >=0.1.0
     , inventory
-    , mtl >=2.2.2 && <2.3
+    , mtl >=2.2.2 && <2.4
   default-language: Haskell2010
 
 test-suite inventory-test
@@ -121,10 +121,10 @@ test-suite inventory-test
     , containers >=0.6.2 && <0.7
     , directory >=1.3.6 && <1.4
     , filepath >=1.4.2 && <1.5
-    , ghc >=8.8 && <9.3
+    , ghc >=8.8 && <9.7
     , ghc-paths >=0.1.0
     , inventory
-    , mtl >=2.2.2 && <2.3
+    , mtl >=2.2.2 && <2.4
     , tasty
     , tasty-hunit
   default-language: Haskell2010

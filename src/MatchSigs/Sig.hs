@@ -11,6 +11,7 @@ module MatchSigs.Sig
   , isQual
   ) where
 
+import           Control.Monad
 import           Control.Monad.State
 import qualified Data.ByteString as BS
 import           Data.Either
@@ -138,6 +139,13 @@ mkSig node
   = fmap (:[])
   $ KindSig <$> mkSig ty
             <*> mkSig ki
+
+  -- hs sig
+  | nodeHasAnnotation "HsSig" "HsSigType" node
+  , rest : userVarNodes <- reverse $ nodeChildren node
+  = do
+    vars <- foldM extractFreeVar [] userVarNodes
+    (VarCtx vars :) <$> mkSig rest
 
   -- any other type
 #if MIN_VERSION_ghc(9,2,0)

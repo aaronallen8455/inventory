@@ -8,13 +8,14 @@ module HieFile
   ) where
 
 import           Control.Exception (onException)
-import           Control.Monad.State
+import           Control.Monad
 import qualified Data.Array as A
 #if __GLASGOW_HASKELL__ < 900
+import           Control.Monad.State
 import           Data.Bifunctor
 #endif
 import qualified Data.ByteString.Char8 as BS
-#if __GLASGOW_HASKELL__ >= 900
+#if MIN_VERSION_ghc(9,0,0) && !MIN_VERSION_ghc(9,4,0)
 import           Data.IORef
 #endif
 import           Data.Maybe
@@ -72,7 +73,22 @@ getHieFiles = do
   let srcFileExists = doesPathExist . hie_hs_file
   filterM srcFileExists hieFiles
 
-#if __GLASGOW_HASKELL__ >= 900
+#if MIN_VERSION_ghc(9,4,0)
+
+hieFilesFromPaths :: [FilePath] -> IO [HieFile]
+hieFilesFromPaths filePaths = do
+  nameCache <- mkNameCache
+  traverse (getHieFile nameCache) filePaths
+
+getHieFile :: NameCache -> FilePath -> IO HieFile
+getHieFile nameCache filePath =
+  handleHieVersionMismatch filePath . fmap hie_file_result
+    =<< readHieFileWithVersion
+          (\(v, _) -> v == hieVersion)
+          nameCache
+          filePath
+
+#elif __GLASGOW_HASKELL__ >= 900
 
 hieFilesFromPaths :: [FilePath] -> IO [HieFile]
 hieFilesFromPaths filePaths = do
@@ -118,8 +134,12 @@ handleHieVersionMismatch path = either errMsg pure where
 
 mkNameCache :: IO NameCache
 mkNameCache = do
+#if MIN_VERSION_ghc(9,4,0)
+  initNameCache 'z' []
+#else
   uniqueSupply <- mkSplitUniqSupply 'z'
   pure $ initNameCache uniqueSupply []
+#endif
 
 -- | Recursively search for .hie files in given directory
 getHieFilesIn :: FilePath -> IO [FilePath]

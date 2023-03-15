@@ -58,36 +58,47 @@ declLines src node
   | nodeHasAnnotation "IEName" "IEWrappedName" node
   = AppendMap $ M.singleton ExportThing (numLines $ nodeSpan node, 1)
 
-  | otherwise = foldMap ( foldMap (foldMap (tyDeclLines src) . identInfo)
-                        . nodeIdentifiers
-                        . getNodeInfo )
-              $ nodeChildren node
+  | nodeHasAnnotation "IEThingAll" "IE" node
+  = AppendMap $ M.singleton ExportThing (numLines $ nodeSpan node, 1)
+
+  | nodeHasAnnotation "IEPattern" "IEWrappedName" node
+  = AppendMap $ M.singleton ExportThing (numLines $ nodeSpan node, 1)
+
+  | nodeHasAnnotation "IEVar" "IE" node
+  = AppendMap $ M.singleton ExportThing (numLines $ nodeSpan node, 1)
+
+  | otherwise = foldNodeChildren (tyDeclLines src) node
 
 numLines :: Span -> Sum Int
 numLines s = Sum $ srcSpanEndLine s - srcSpanStartLine s + 1
 
-tyDeclLines :: SourceCode -> ContextInfo -> DefCounter
-tyDeclLines src = \case
-  Decl declTy (Just srcSpan)
-    | Just defTy <- toDefType srcSpan declTy
-    -> AppendMap $ M.singleton defTy (numLines srcSpan, 1)
-  _ -> mempty
+tyDeclLines :: SourceCode -> HieAST a -> DefCounter
+tyDeclLines src node = fromCurrentNode <> fromChildren
   where
-    toDefType srcSpan = \case
-      FamDec           -> Just Fam
-      SynDec           -> Just Syn
-      DataDec
-        | isNewtypeDec -> Just Newtype
-        | otherwise    -> Just Data
-      PatSynDec        -> Just PatSyn
-      ClassDec         -> Just Class
-      InstDec          -> Just TyFamInst
-      _                -> Nothing
+    fromCurrentNode =
+      foldMap (foldMap go . identInfo) . nodeIdentifiers $ getNodeInfo node
+    fromChildren = foldNodeChildren (tyDeclLines src) node
 
+    go = \case
+      Decl declTy (Just srcSpan)
+        | Just defTy <- toDefType srcSpan declTy
+        -> AppendMap $ M.singleton defTy (numLines srcSpan, 1)
+      _ -> mempty
       where
-        isNewtypeDec =
-          let ln = srcSpanStartLine srcSpan - 1
-              col = srcSpanStartCol srcSpan - 1
-              (lBnd, uBnd) = A.bounds src
-           in ln >= lBnd && ln <= uBnd
-           && "newtype" == (BS.take 7 . BS.drop col $ src A.! ln)
+        toDefType srcSpan = \case
+          FamDec           -> Just Fam
+          SynDec           -> Just Syn
+          DataDec
+            | isNewtypeDec -> Just Newtype
+            | otherwise    -> Just Data
+          PatSynDec        -> Just PatSyn
+          ClassDec         -> Just Class
+          InstDec          -> Just TyFamInst
+          _                -> Nothing
+          where
+            isNewtypeDec =
+              let ln = srcSpanStartLine srcSpan - 1
+                  col = srcSpanStartCol srcSpan - 1
+                  (lBnd, uBnd) = A.bounds src
+               in ln >= lBnd && ln <= uBnd
+               && "newtype" == (BS.take 7 . BS.drop col $ src A.! ln)

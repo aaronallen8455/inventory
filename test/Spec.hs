@@ -1,4 +1,6 @@
+{-# LANGUAGE CPP #-}
 import           Data.Bifunctor
+import           Data.List (sort)
 import           Data.Map.Append.Strict (AppendMap(..))
 import qualified Data.Map.Strict as M
 import           Data.Monoid
@@ -47,14 +49,19 @@ main = defaultMain $
               [ (Class, (1, 1))
               , (Data, (1, 1))
               , (Newtype, (2, 1))
+#if MIN_VERSION_ghc(9,2,0)
+              , (Fam, (3, 2))
+#else
               , (Fam, (2, 2))
+#endif
               , (Func, (2, 1))
               , (PatSyn, (1, 1))
               , (Syn, (1, 1))
               , (ClassInst, (2, 2))
               , (TyFamInst, (2, 2))
+              , (TyFamInst, (2, 2))
               , (ModImport, (1, 1))
-              , (ExportThing, (5, 5))
+              , (ExportThing, (8, 8))
               ]
 
     , testCase "Use Counts" $ do
@@ -71,7 +78,8 @@ sigMatchTest :: String -> DynFlags -> [Int] -> IO ()
 sigMatchTest testName dynFlags sigGroupSizes = do
   (_, _, AppendMap sigMap, _) <- getCounters testName dynFlags
 
-  assertEqual testName sigGroupSizes
+  assertEqual testName (sort sigGroupSizes)
+    . sort
     . concatMap (map (\(_, _, names) -> length names) . getMatchedSigs)
     $ M.elems sigMap
 
@@ -83,10 +91,15 @@ defCountTest testName dynFlags expectedDefCount = do
 useCountTest :: FilePath -> DynFlags -> [(String, Int)] -> IO ()
 useCountTest testName dynFlags expectedUseCount = do
   (_, AppendMap useCount, _, _) <- getCounters testName dynFlags
-  let printName = showSDoc dynFlags . pprNameUnqualified
+  let printName =
+#if MIN_VERSION_ghc(9,2,0)
+        showSDocOneLine (initDefaultSDocContext dynFlags) . pprNameUnqualified
+#else
+        showSDoc dynFlags . pprNameUnqualified
+#endif
       actualCount = map (bimap printName usages) . M.toList
                   $ M.filter locallyDefined useCount
-  assertEqual testName expectedUseCount actualCount
+  assertEqual testName (sort expectedUseCount) (sort actualCount)
 
 getHiePath :: String -> FilePath
 getHiePath testName = "test/hie/HieSource/" <> testName <> ".hie"
